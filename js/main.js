@@ -116,11 +116,13 @@ function render() {
   const g = E.nextGoal(s);
   $('goal').innerHTML = g ? `🎯 <b>Hedef:</b> ${esc(g.ad)} <small>(${Object.keys(s.goals || {}).length}/${E.GOALS.length})</small>` : '🏆 Bütün hedefler tamam!';
   renderHayat();
-  $('stats').innerHTML = STATS.map(([k, l, c, inv]) => {
-    const v = Math.round(s[k]);
+  if (!$('st-i')) $('stats').innerHTML = STATS.map(([k, l]) => `<div class="stat" id="st-${k}"><div class="lbl"><span>${l}</span><b></b></div><div class="bar"><i></i></div></div>`).join('');
+  for (const [k, , c, inv] of STATS) {
+    const v = Math.round(s[k]), el = $(`st-${k}`);
     const col = inv ? (v > 70 ? '#e5484d' : v > 40 ? '#f4a20d' : '#46a758') : c;
-    return `<div class="stat" id="st-${k}"><div class="lbl"><span>${l}</span><b>${v}</b></div><div class="bar"><i style="width:${v}%;background:${col}"></i></div></div>`;
-  }).join('');
+    el.querySelector('b').textContent = v;
+    Object.assign(el.querySelector('i').style, { width: `${v}%`, background: col });
+  }
   renderProjects();
   PHONE.badge();
   $('gunluk').innerHTML = s.log.map((l) => `<div class="log-line">${esc(l)}</div>`).join('') || '<p class="log-line">Henüz bir şey olmadı.</p>';
@@ -132,9 +134,23 @@ function render() {
   $('yeniProjeBtn').title = E.canStartProject(s) ? '' : `Aynı anda en fazla ${E.maxConcurrent(s)} proje yürütebilirsin (bitirdikçe artar).`;
 }
 
+// Para değişince sayı akarak değişir
 function setMoney(id, v, debt) {
-  $(id).textContent = debt ? E.fmt(-v) : E.fmt(v);
-  $(id).className = v < 0 ? 'neg' : '';
+  const el = $(id), from = el._v ?? v;
+  el._v = v;
+  el.className = v < 0 ? 'neg' : '';
+  const show = (x) => (el.textContent = debt ? E.fmt(-x) : E.fmt(x));
+  cancelAnimationFrame(el._raf);
+  if (Math.abs(from - v) < 0.005) return show(v);
+  el.classList.add(v > from ? 'money-up' : 'money-down');
+  const t0 = performance.now();
+  const step = (now) => {
+    const k = Math.min(1, (now - t0) / 650), e = 1 - Math.pow(1 - k, 3);
+    show(from + (v - from) * e);
+    if (k < 1) el._raf = requestAnimationFrame(step);
+    else el.classList.remove('money-up', 'money-down');
+  };
+  el._raf = requestAnimationFrame(step);
 }
 
 function renderProjects() {
@@ -419,17 +435,22 @@ function doChoose(i, mini) {
     if (e[0] === 'goal') { toast(`🎯 Hedef tamam: ${e[1]}`, 'goal'); SFX.play('goal'); }
     if (e[0] === 'sin') toast('⏳ Bu karar dosyaya girdi…', 'sin');
   }
-  if (sceneOk && res.events.some((e) => e[0] === 'info' && /tamamlandı!/.test(e[1]))) S3.fireworks?.(state);
+  if (sceneOk && res.events.some((e) => e[0] === 'info' && /tamamlandı!/.test(e[1]))) {
+    S3.fireworks?.(state);
+    const bitti = state.projects.filter((p) => p.done && !p.collapsed && p.slot >= 0).sort((a, b) => (b.doneAt ?? 0) - (a.doneAt ?? 0))[0];
+    if (bitti) S3.cinematic('bitis', bitti.id);
+  }
   if (sceneOk) {
     if (c.quake) {
       const col = (state.lastQuake?.collapsed || []).map((p) => p.id);
       S3.quake(c.quake, col, () => S3.sync(state));
+      S3.cinematic('deprem', col[0]);
     } else S3.sync(state);
-    if (state.ending === 'kacak' || state.ending === 'iade') S3.flyPlane();
+    if (state.ending === 'kacak' || state.ending === 'iade') { S3.flyPlane(); S3.cinematic('kacis'); }
   }
   delete state.lastQuake;
   render();
-  for (const [k] of STATS) if (Math.round(before[k]) !== Math.round(state[k])) $(`st-${k}`)?.classList.add('flash');
+  for (const [k] of STATS) if (Math.round(before[k]) !== Math.round(state[k])) { const el = $(`st-${k}`); if (el) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); } }
   if (state.ending) E.clearSave(); else E.save(state);
 }
 

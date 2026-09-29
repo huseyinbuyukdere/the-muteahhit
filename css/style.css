@@ -406,3 +406,15 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .pick-pop .neg { color: #ff8a8d; }
 @keyframes ppIn { from { opacity: 0; transform: translateY(6px) scale(.97); } to { opacity: 1; transform: none; } }
 @media (max-width: 860px) { .pick-pop { left: 10px !important; right: 10px; top: 118px !important; width: auto; max-height: 42vh; } .pick-pop .kesit { max-height: 110px; } }
+
+/* Sinematik an: üstte ve altta siyah şerit */
+body::before, body::after { content: ''; position: fixed; left: 0; right: 0; height: 0; background: #000; z-index: 45; pointer-events: none; transition: height .6s ease; }
+body::before { top: 0; } body::after { bottom: 0; }
+body.cine::before, body.cine::after { height: 7vh; }
+
+/* Kart seçenekleri sırayla gelir */
+.choices button { animation: rise .32s ease backwards; }
+.choices button:nth-child(2) { animation-delay: .06s; } .choices button:nth-child(3) { animation-delay: .12s; } .choices button:nth-child(4) { animation-delay: .18s; }
+.choices button:active { transform: scale(.98); }
+#resultBox:not(.hidden) { animation: rise .3s ease; }
+.money-up { color: #7ee08f !important; } .money-down { color: #ff8a8d !important; }

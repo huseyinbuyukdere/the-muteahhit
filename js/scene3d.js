@@ -24,6 +24,7 @@ const RESERVED = { ofis: [-1, 1], galeri: [0, -1], dugun: [1, -1], tv: [2, -1], 
 const VILLA = { x: 70, z: -40 };
 const OTEL = { x: -7.5, z: 46 };
 const texCache = {};
+const GREY = new THREE.Color('#8f99a3'), SUN_DAY = new THREE.Color('#fff3dd'), SUN_DUSK = new THREE.Color('#ffb070'), FOCUS_OFF = new THREE.Vector3(18, 20, 22);
 const rand = (a, b) => a + Math.random() * (b - a);
 
 export function slotPos(slot) {
@@ -77,7 +78,7 @@ const mat = (color, opts = {}) => new THREE.MeshStandardMaterial({ color, roughn
 
 export function init(canvas) {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, LOW ? 1.5 : 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -90,11 +91,11 @@ export function init(canvas) {
   controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.47; controls.minDistance = 12; controls.maxDistance = 130;
   controls.autoRotate = true; controls.autoRotateSpeed = 0.35;
-  controls.addEventListener('start', () => { controls.autoRotate = false; focusTarget = null; });
+  controls.addEventListener('start', () => { controls.autoRotate = false; focusTarget = null; if (cine) { cine = null; document.body.classList.remove('cine'); } });
   hemi = new THREE.HemisphereLight('#dfefff', '#4a5a3a', 0.9); scene.add(hemi);
   sun = new THREE.DirectionalLight('#fff3dd', 1.6);
   sun.position.set(40, 60, 20); sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(LOW ? 1024 : 2048, LOW ? 1024 : 2048);
   Object.assign(sun.shadow.camera, { left: -60, right: 60, top: 60, bottom: -60, far: 200 });
   scene.add(sun);
   buildWorld();
@@ -268,9 +269,9 @@ function buildProject(p) {
     const conc = mat('#9c9a95'), slab = mat('#b5b2ab');
     for (const [bx, bz] of S.blocks) {
       for (let f = 0; f < floors; f++) {
-        const s = box(S.w + 0.3, 0.18, S.d + 0.3, slab); s.position.set(bx, f * FLOOR_H + FLOOR_H, bz); g.add(s);
+        const s = box(S.w + 0.3, 0.18, S.d + 0.3, slab); s.position.set(bx, f * FLOOR_H + FLOOR_H, bz); s.userData.floorIdx = f; g.add(s);
         for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, 0]]) {
-          const c = box(0.3, FLOOR_H, 0.3, conc); c.position.set(bx + cx * S.w / 2.3, f * FLOOR_H + FLOOR_H / 2, bz + cz * S.d / 2.3); g.add(c);
+          const c = box(0.3, FLOOR_H, 0.3, conc); c.position.set(bx + cx * S.w / 2.3, f * FLOOR_H + FLOOR_H / 2, bz + cz * S.d / 2.3); c.userData.floorIdx = f; g.add(c);
         }
       }
       const sc = new THREE.Mesh(new THREE.BoxGeometry(S.w + 0.9, floors * FLOOR_H + 0.8, S.d + 0.9), new THREE.MeshStandardMaterial({ color: '#2e9e4f', transparent: true, opacity: 0.28, wireframe: false, depthWrite: false }));
@@ -284,6 +285,8 @@ function buildProject(p) {
     const arm = box(11, 0.4, 0.4, cm); arm.position.x = 3; jib.add(arm);
     const cw = box(1.2, 0.9, 0.9, mat('#444')); cw.position.x = -2.2; jib.add(cw);
     const cable = box(0.05, 4, 0.05, mat('#222')); cable.position.set(7, -2, 0); jib.add(cable);
+    const load = box(1.4, 0.35, 0.9, mat('#8b5a2b')); load.position.set(7, -4.2, 0); jib.add(load);
+    jib.userData = { cable, load, ph: rand(0, 6) };
     crane.add(jib); crane.position.set(S.w / 2 + 1.5, 0, -S.d / 2 - 1);
     if (p.tier === 1) crane.position.set(0, 0, 0);
     g.add(crane); g.userData.cranes.push(jib);
@@ -714,6 +717,154 @@ function bindPicking(canvas) {
   });
 }
 
+// ---------- Görsel: hava durumu, kat kat yükselme, mikser, sinematik kamera, kalite ayarı ----------
+const LOW = typeof window !== 'undefined' && (window.innerWidth <= 860 || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches));
+let weather = null, weatherKind = '', wetness = 0, growers = [], mixerT = 8, cine = null, perf = { n: 0, sum: 0, done: false };
+
+function setWeather(kind) {
+  if (kind === weatherKind) return;
+  weatherKind = kind;
+  if (weather) { scene.remove(weather); weather.geometry.dispose(); weather = null; }
+  if (!kind) return;
+  const n = Math.round((LOW ? 700 : 1800) * (kind === 'kar' ? 0.8 : 1));
+  const W = 110, H = 60;
+  if (kind === 'yagmur') {
+    const arr = new Float32Array(n * 6);
+    for (let i = 0; i < n; i++) { const x = rand(-W / 2, W / 2), y = rand(0, H), z = rand(-W / 2, W / 2); arr.set([x, y, z, x - 0.12, y + 0.9, z], i * 6); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+    weather = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: '#b8c8da', transparent: true, opacity: 0.55, depthWrite: false }));
+  } else {
+    const arr = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) arr.set([rand(-W / 2, W / 2), rand(0, H), rand(-W / 2, W / 2)], i * 3);
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+    weather = new THREE.Points(g, new THREE.PointsMaterial({ color: '#ffffff', size: 0.55, map: glowTex(), transparent: true, opacity: 0.95, depthWrite: false }));
+  }
+  weather.frustumCulled = false; weather.userData = { W, H, kind };
+  scene.add(weather);
+}
+
+function tickWeather(dt, t) {
+  const target = weatherKind ? 1 : 0;
+  wetness += (target - wetness) * Math.min(1, dt * 0.8);
+  if (!weather) return;
+  weather.position.set(controls.target.x, 0, controls.target.z);
+  const a = weather.geometry.attributes.position, arr = a.array, { W, H, kind } = weather.userData;
+  if (kind === 'yagmur') {
+    const dy = 42 * dt, dx = 5 * dt;
+    for (let i = 0; i < arr.length; i += 6) {
+      arr[i + 1] -= dy; arr[i + 4] -= dy; arr[i] -= dx; arr[i + 3] -= dx;
+      if (arr[i + 1] < 0) { const x = rand(-W / 2, W / 2), z = rand(-W / 2, W / 2); arr[i] = x; arr[i + 1] = H; arr[i + 2] = z; arr[i + 3] = x - 0.12; arr[i + 4] = H + 0.9; arr[i + 5] = z; }
+    }
+  } else {
+    for (let i = 0; i < arr.length; i += 3) {
+      arr[i + 1] -= 3.2 * dt; arr[i] += Math.sin(t * 0.8 + i) * dt * 0.9;
+      if (arr[i + 1] < 0) { arr[i] = rand(-W / 2, W / 2); arr[i + 1] = H; arr[i + 2] = rand(-W / 2, W / 2); }
+    }
+  }
+  a.needsUpdate = true;
+}
+
+// Oyun ayına göre hava: kışın kar, bahar/güz yağmur, yaz çoğunlukla açık
+function weatherFor(t) {
+  const ay = ((t % 12) + 12) % 12, h = ((t * 9301 + 49297) % 233280) / 233280;
+  if (ay === 11 || ay <= 1) return h < 0.5 ? 'kar' : h < 0.7 ? 'yagmur' : '';
+  if ((ay >= 2 && ay <= 4) || ay >= 9) return h < 0.35 ? 'yagmur' : '';
+  return h < 0.07 ? 'yagmur' : '';
+}
+
+function growFloors(g, from) {
+  let delay = 0;
+  const byFloor = {};
+  g.traverse((o) => { const f = o.userData.floorIdx; if (f != null && f >= from) (byFloor[f] = byFloor[f] || []).push(o); });
+  for (const f of Object.keys(byFloor).sort((a, b) => a - b)) {
+    for (const o of byFloor[f]) { o.scale.y = 0.01; growers.push({ o, t: -delay, g, top: +f }); }
+    delay += 0.45;
+  }
+}
+
+function tickGrow(dt) {
+  for (let i = growers.length - 1; i >= 0; i--) {
+    const gr = growers[i]; gr.t += dt;
+    if (gr.t < 0) continue;
+    const k = Math.min(1, gr.t / 0.55), c1 = 1.70158;
+    gr.o.scale.y = Math.max(0.01, 1 + (c1 + 1) * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2));
+    if (k >= 1) {
+      gr.o.scale.y = 1; growers.splice(i, 1);
+      if (!growers.some((x) => x.g === gr.g && x.top === gr.top) && gr.o.parent) {
+        const p = new THREE.Vector3(); gr.o.getWorldPosition(p);
+        if (!LOW || Math.random() < 0.5) burst(p, ['#b8b1a6', '#d6d0c4'], 24, 2, 0.9, -0.3, 0.6);
+      }
+    }
+  }
+}
+
+function mixerMesh() {
+  const g = new THREE.Group();
+  const chassis = box(1.2, 0.35, 3.4, cm('#333')); chassis.position.y = 0.45; g.add(chassis);
+  const cab = box(1.2, 0.95, 1, cm('#e63946')); cab.position.set(0, 1.05, 1.25); g.add(cab);
+  const win = box(1.05, 0.35, 0.05, cm('#223', { roughness: 0.2 })); win.position.set(0, 1.3, 1.76); g.add(win);
+  const drum = new THREE.Group(); drum.position.set(0, 1.35, -0.45); drum.rotation.x = -0.25;
+  const d = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.75, 2.1, 10), cm('#f1ece2', { flatShading: true })); d.rotation.x = Math.PI / 2; drum.add(d);
+  const st = box(0.12, 0.12, 2.1, cm('#e63946')); st.position.y = 0.66; drum.add(st);
+  g.add(drum);
+  for (const [x, z] of [[-0.6, 1.2], [0.6, 1.2], [-0.6, -0.9], [0.6, -0.9]]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.2, 10), cm('#111')); w.rotation.z = Math.PI / 2; w.position.set(x, 0.3, z); g.add(w); }
+  g.userData.spin = drum;
+  return g;
+}
+
+function tickMixers(dt) {
+  mixerT -= dt;
+  if (mixerT > 0) return;
+  mixerT = rand(14, 26);
+  const sites = [...groups.values()].filter((g) => g.userData.sig && g.userData.sig.startsWith('insaat'));
+  if (!sites.length || movers.filter((m) => m.o.userData.spin).length >= 2) return;
+  const g = sites[Math.floor(Math.random() * sites.length)];
+  const base = g.position, z = base.z + GRID.gap / 2 + 0.75, dir = Math.random() < 0.5 ? 1 : -1;
+  const c = mixerMesh(); c.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+  const path = [{ p: new THREE.Vector3(base.x - dir * 50, 0, z) }, { p: new THREE.Vector3(base.x + dir * 1.5, 0, z) }, { p: new THREE.Vector3(base.x + dir * 1.5, 0, z), w: 7 }, { p: new THREE.Vector3(base.x + dir * 1.5, 0, z) }, { p: new THREE.Vector3(base.x + dir * 55, 0, z) }];
+  c.position.copy(path[0].p); scene.add(c);
+  movers.push({ o: c, path, stage: 0, t: 0, dur: 3 });
+}
+
+// Sinematik kamera: önemli anlarda binanın etrafında yavaşça döner
+export function cinematic(kind, projId) {
+  if (!scene) return;
+  const g = projId != null ? groups.get(projId) : null;
+  const target = g ? g.position.clone() : controls.target.clone();
+  const h = g && g.userData.floors ? g.userData.floors * FLOOR_H : 8;
+  const cfg = { bitis: [5.5, 20 + h * 0.4, 6 + h * 0.7, 0.55], deprem: [3.5, 24, 6, 0.25], kacis: [5, 30, 18, 0.4] }[kind] || [4, 24, 10, 0.4];
+  const a0 = Math.atan2(camera.position.z - target.z, camera.position.x - target.x);
+  cine = { target: target.setY(h * 0.4), t: 0, dur: cfg[0], r: cfg[1], h: cfg[2], w: cfg[3], a0 };
+  controls.autoRotate = false; focusTarget = null;
+  document.body.classList.add('cine');
+  clearTimeout(cinematic._t); cinematic._t = setTimeout(() => document.body.classList.remove('cine'), cfg[0] * 1000);
+}
+
+function tickCine(dt) {
+  if (!cine) return false;
+  cine.t += dt;
+  const k = cine.t / cine.dur, ease = k < 0.15 ? k / 0.15 : 1;
+  const a = cine.a0 + cine.t * cine.w;
+  const want = new THREE.Vector3(cine.target.x + Math.cos(a) * cine.r, cine.h, cine.target.z + Math.sin(a) * cine.r);
+  const f = 1 - Math.exp(-dt * (1.5 + ease * 3));
+  camera.position.lerp(want, f);
+  controls.target.lerp(cine.target, f);
+  if (k >= 1) { cine = null; document.body.classList.remove('cine'); }
+  return true;
+}
+
+// Telefonda kasma olursa kaliteyi düşür
+function tickPerf(dt) {
+  if (perf.done || document.hidden) return;
+  perf.n++; if (perf.n < 30) return;
+  perf.sum += dt;
+  if (perf.n < 150) return;
+  perf.done = true;
+  const avg = perf.sum / 120;
+  if (avg > 1 / 40) { renderer.setPixelRatio(1); sun.shadow.mapSize.set(1024, 1024); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+  if (avg > 1 / 24) { renderer.shadowMap.enabled = false; scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; }); }
+}
+
 // ---------- Efektler ----------
 function burst(pos, colors, n, speed, life, gravity, size = 0.35) {
   const geo = new THREE.BufferGeometry();
@@ -746,6 +897,7 @@ function disposeGroup(g) {
   g.traverse((o) => { if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); });
   cranes = cranes.filter((c) => !g.userData.cranes.includes(c));
   workers = workers.filter((w) => w.parent && w.parent !== g && !isChildOf(w, g));
+  growers = growers.filter((x) => x.g !== g);
 }
 const isChildOf = (o, g) => { for (let x = o; x; x = x.parent) if (x === g) return true; return false; };
 
@@ -757,16 +909,23 @@ export function sync(state) {
     const sig = signature(p);
     const cur = groups.get(p.id);
     if (cur && cur.userData.sig === sig) continue;
+    const prevFloors = cur && cur.userData.phase === 'insaat' ? cur.userData.builtFloors : null;
     if (cur) disposeGroup(cur);
     const g = buildProject(p);
     g.userData.sig = sig; g.userData.cranes = g.userData.cranes || [];
+    g.userData.phase = p.phase; g.userData.floors = p.floors;
+    g.userData.builtFloors = p.phase === 'insaat' ? Math.max(1, Math.ceil((p.progress / 100) * p.floors)) : 0;
+    if (p.phase === 'insaat' && initDone) growFloors(g, prevFloors ?? 0);
     cranes.push(...g.userData.cranes);
     scene.add(g); groups.set(p.id, g);
   }
   for (const [id, g] of groups) if (!seen.has(id)) { disposeGroup(g); groups.delete(id); }
   syncAssets(state);
   syncEnv(state);
+  setWeather(weatherFor(state.t || 0));
+  initDone = true;
 }
+let initDone = false;
 
 export function focus(p) {
   if (!p || p.slot < 0) return;
@@ -796,7 +955,12 @@ let lastT = 0;
 function tick() {
   const dt = Math.min(0.05, clock.getDelta());
   const t = clock.elapsedTime;
-  for (const c of cranes) c.rotation.y += dt * 0.25;
+  for (const c of cranes) {
+    c.rotation.y += dt * 0.25;
+    const u = c.userData; if (u && u.cable) { const k = 0.55 + 0.45 * Math.sin(t * 0.45 + u.ph); u.cable.scale.y = k; u.cable.position.y = -2 * k; u.load.position.y = -4 * k - 0.2; }
+  }
+  tickWeather(dt, t); tickGrow(dt); tickMixers(dt); tickPerf(dt);
+  for (const mv of movers) if (mv.o.userData.spin) mv.o.userData.spin.rotation.z += dt * 3;
   for (const c of cars) {
     const u = c.userData, k = u.vertical ? 'z' : 'x';
     c.position[k] += u.dir * u.speed * dt;
@@ -822,17 +986,23 @@ function tick() {
   const day = (Math.sin(t * 0.035) + 1) / 2;
   const dayCol = new THREE.Color('#9cc7e8'), nightCol = new THREE.Color('#141b2d'), dusk = new THREE.Color('#e59866');
   const sky = nightCol.clone().lerp(day > 0.5 ? dayCol : dusk, Math.min(1, day * 1.6)).lerp(dayCol, Math.max(0, (day - 0.6) * 2.5));
+  if (wetness > 0.01) sky.lerp(GREY.clone().multiplyScalar(0.35 + day * 0.65), wetness * 0.6);
   scene.background.copy(sky); scene.fog.color.copy(sky);
-  sun.intensity = 0.25 + day * 1.5; hemi.intensity = 0.35 + day * 0.6;
+  scene.fog.far = 180 - wetness * 70; scene.fog.near = 70 - wetness * 35;
+  sun.intensity = (0.25 + day * 1.5) * (1 - wetness * 0.45); hemi.intensity = 0.35 + day * 0.6;
+  const sa = t * 0.035;
+  sun.position.set(Math.cos(sa) * 55, 22 + day * 45, 20 + Math.sin(sa) * 25);
+  sun.color.copy(SUN_DAY).lerp(SUN_DUSK, Math.max(0, 1 - day * 2.2));
   if (t - lastT > 0.5) {
     lastT = t;
     const e = Math.max(0, 1 - day * 1.8) * 1.4;
     for (const m of cityMat) m.emissiveIntensity = e;
   }
-  if (focusTarget) {
-    controls.target.lerp(focusTarget, 0.06);
-    const desired = focusTarget.clone().add(new THREE.Vector3(18, 20, 22));
-    camera.position.lerp(desired, 0.04);
+  const inCine = tickCine(dt);
+  if (focusTarget && !inCine) {
+    controls.target.lerp(focusTarget, 1 - Math.exp(-dt * 3.2));
+    const desired = focusTarget.clone().add(FOCUS_OFF);
+    camera.position.lerp(desired, 1 - Math.exp(-dt * 2.2));
     if (camera.position.distanceTo(desired) < 0.5) focusTarget = null;
   }
   for (const s of sinking) {
