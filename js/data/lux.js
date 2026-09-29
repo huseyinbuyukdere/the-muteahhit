@@ -1,0 +1,30 @@
+// Lüks harcamalar ve yan işler. fiyat/gelir/gider M₺; gelir ve gider aylıktır. min: gereken tamamlanmış proje sayısı.
+export const LUX = {
+  rolex: { ad: "Altın Rolex", ikon: "⌚", tur: "luks", fiyat: 1.2, gider: 0, min: 0, fx: "i+1",
+    a: "Hakediş isteyen ustaya saatini göstererek 'para yok' demek ayrı bir sanattır." },
+  mercedes: { ad: "Siyah Mercedes S-Serisi", ikon: "🚘", tur: "luks", fiyat: 4, gider: 0.04, min: 1, fx: "i+3 g+4",
+    a: "Şantiyeye Mercedes'le gelen müteahhide yatırımcı güvenir. Maliye de ilgilenir." },
+  range: { ad: "Eşine Range Rover", ikon: "🚙", tur: "luks", fiyat: 3.5, gider: 0.04, min: 1, fx: "i+1",
+    a: "Evde huzur. Mahallede dedikodu." },
+  villa: { ad: "Zekeriyaköy'de Havuzlu Villa", ikon: "🏡", tur: "luks", fiyat: 25, gider: 0.2, min: 2, fx: "i+5 g+5",
+    a: "Villa açılışına kimleri çağırdığın, bir sonraki imar değişikliğini belirler." },
+  yat: { ad: "Bodrum'da Yat", ikon: "🛥️", tur: "luks", fiyat: 40, gider: 0.45, min: 4, fx: "i+4 g+6",
+    a: "Mavi turda imzalanan anlaşmalar hiçbir tutanağa geçmez." },
+  helikopter: { ad: "Helikopter", ikon: "🚁", tur: "luks", fiyat: 70, gider: 0.7, min: 6, fx: "i+6 g+8",
+    a: "Trafikte kalmak fakir işi." },
+  galeri: { ad: "Oto Galeri", ikon: "🏎️", tur: "is", fiyat: 8, gelir: 0.32, min: 1, fx: "i+2",
+    a: "Araba al-sat. Nakit parayı 'temizlemenin' de en bilinen yollarından biri." },
+  dugun: { ad: "Düğün Salonu", ikon: "💒", tur: "is", fiyat: 12, gelir: 0.45, min: 2, fx: "i+3",
+    a: "Her hafta sonu dolu. Belediye başkanının oğlunun düğünü de burada olacak." },
+  beton: { ad: "Hazır Beton Santrali", ikon: "🏭", tur: "is", fiyat: 30, gelir: 0.7, min: 3, fx: "",
+    a: "İnşaat maliyetin %12 düşer. Betona ne kadar su katılacağına artık sen karar verirsin." },
+  kulup: { ad: "Amatör Futbol Kulübü", ikon: "⚽", tur: "is", fiyat: 12, gider: 0.3, min: 2, fx: "i+10",
+    a: "Tribün adını bağırır. Seçim zamanı siyasetçiler kapını çalar." },
+  tv: { ad: "Yerel TV Kanalı", ikon: "📺", tur: "is", fiyat: 40, gelir: 0.2, gider: 0.35, min: 5, fx: "i+6 r-5",
+    a: "Haberleri artık sen yaptırırsın. Geçmişin daha zor ortaya çıkar." },
+  otel: { ad: "Bodrum'da Butik Otel", ikon: "🏨", tur: "is", fiyat: 50, gelir: 1.4, min: 4, fx: "i+4",
+    a: "Sahil şeridine iki metre taşsa kimin haberi olur?" },
+};
+
+export const FIRMA_ADLARI = ["Güven Yapı", "Altın Kardeşler İnşaat", "Sağlam Yapı", "Dürüst İnşaat", "Huzur Konut", "Anadolu Yapı",
+  "Kale İnşaat", "Temel Taş Yapı", "Mega Konut", "Yıldırım İnşaat", "Işık Yapı", "Emek İnşaat"];

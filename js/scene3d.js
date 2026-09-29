@@ -13,6 +13,13 @@ const SIZES = [
 let renderer, scene, camera, controls, clock, sun, hemi, cityMat;
 const groups = new Map();
 let cranes = [], shake = 0, plane = null, focusTarget = null, sinking = [];
+let cars = [], clouds = [], particles = [], assetGroup = null, assetSig = '', yacht = null, rotors = [], seaMesh = null;
+const cx = (k) => (k - (GRID.cols - 1) / 2) * GRID.gap, cz = (k) => (k - (GRID.rows - 1) / 2) * GRID.gap;
+const SEA_Z = 52, BEACH_Z = 40;
+// Oyuncunun varlıkları için ayrılmış hücreler
+const RESERVED = { ofis: [-1, 1], galeri: [0, -1], dugun: [1, -1], tv: [2, -1], kulup: [3, -1], beton: [4, 1] };
+const VILLA = { x: 70, z: -40 };
+const OTEL = { x: -7.5, z: 46 };
 const texCache = {};
 const rand = (a, b) => a + Math.random() * (b - a);
 
@@ -70,6 +77,8 @@ export function init(canvas) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
   scene = new THREE.Scene();
   scene.background = new THREE.Color('#9cc7e8');
   scene.fog = new THREE.Fog('#9cc7e8', 70, 180);
@@ -104,17 +113,53 @@ function buildWorld() {
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
   const road = mat('#3b3f45');
   const lineM = mat('#e8e2c8');
-  const span = 190;
-  const cx = (k) => (k - (GRID.cols - 1) / 2) * GRID.gap, cz = (k) => (k - (GRID.rows - 1) / 2) * GRID.gap;
+  const span = 190, vTop = -95, vBot = BEACH_Z, vLen = vBot - vTop, vMid = (vTop + vBot) / 2;
   const lines = [];
   for (let k = -5; k < GRID.cols + 5; k++) lines.push([true, cx(k) + GRID.gap / 2]);
-  for (let k = -5; k < GRID.rows + 5; k++) lines.push([false, cz(k) + GRID.gap / 2]);
+  for (let k = -5; k < GRID.rows + 5; k++) if (cz(k) + GRID.gap / 2 < BEACH_Z) lines.push([false, cz(k) + GRID.gap / 2]);
   for (const [vertical, off] of lines) {
-    const r = new THREE.Mesh(new THREE.PlaneGeometry(vertical ? 3.2 : span, vertical ? span : 3.2), road);
-    r.rotation.x = -Math.PI / 2; r.position.set(vertical ? off : 0, vertical ? 0.02 : 0.021, vertical ? 0 : off); r.receiveShadow = true; scene.add(r);
-    const l = new THREE.Mesh(new THREE.PlaneGeometry(vertical ? 0.12 : span, vertical ? span : 0.12), lineM);
-    l.rotation.x = -Math.PI / 2; l.position.set(vertical ? off : 0, 0.03, vertical ? 0 : off); scene.add(l);
+    const r = new THREE.Mesh(new THREE.PlaneGeometry(vertical ? 3.2 : span, vertical ? vLen : 3.2), road);
+    r.rotation.x = -Math.PI / 2; r.position.set(vertical ? off : 0, vertical ? 0.02 : 0.021, vertical ? vMid : off); r.receiveShadow = true; scene.add(r);
+    const l = new THREE.Mesh(new THREE.PlaneGeometry(vertical ? 0.12 : span, vertical ? vLen : 0.12), lineM);
+    l.rotation.x = -Math.PI / 2; l.position.set(vertical ? off : 0, 0.03, vertical ? vMid : off); scene.add(l);
   }
+  // Sahil ve deniz
+  const beach = new THREE.Mesh(new THREE.PlaneGeometry(400, SEA_Z - BEACH_Z + 2), mat('#e3d3a4'));
+  beach.rotation.x = -Math.PI / 2; beach.position.set(0, 0.015, (BEACH_Z + SEA_Z) / 2); beach.receiveShadow = true; scene.add(beach);
+  seaMesh = new THREE.Mesh(new THREE.PlaneGeometry(400, 160, 60, 24), new THREE.MeshStandardMaterial({ color: '#2f86b8', roughness: 0.25, metalness: 0.1, transparent: true, opacity: 0.93, flatShading: true }));
+  seaMesh.rotation.x = -Math.PI / 2; seaMesh.position.set(0, 0.08, SEA_Z + 80); scene.add(seaMesh);
+  for (let i = 0; i < 14; i++) { // şemsiyeler
+    const x = rand(-90, 90), z = rand(BEACH_Z + 3, SEA_Z - 2);
+    if (Math.abs(x - OTEL.x) < 9) continue;
+    const pole = box(0.08, 1.6, 0.08, mat('#ddd')); pole.position.set(x, 0.8, z); scene.add(pole);
+    const top = new THREE.Mesh(new THREE.ConeGeometry(1, 0.5, 8), mat(['#e63946', '#f4a261', '#2a9d8f', '#fff'][i % 4])); top.position.set(x, 1.7, z); scene.add(top);
+  }
+  // Trafik
+  const carCols = ['#c1121f', '#f1faee', '#1d3557', '#ffb703', '#6c757d', '#2a9d8f', '#111'];
+  for (let i = 0; i < 26; i++) {
+    const vertical = Math.random() < 0.5;
+    const pool = lines.filter((l) => l[0] === vertical);
+    const [, off] = pool[Math.floor(Math.random() * pool.length)];
+    const c = carMesh(carCols[i % carCols.length]);
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    const lane = dir * 0.75;
+    if (vertical) { c.position.set(off + lane, 0, rand(vTop, vBot)); c.rotation.y = dir > 0 ? 0 : Math.PI; }
+    else { c.position.set(rand(-95, 95), 0, off - lane); c.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2; }
+    c.userData = { vertical, dir, speed: rand(5, 11), min: vertical ? vTop : -95, max: vertical ? vBot : 95 };
+    scene.add(c); cars.push(c);
+  }
+  // Bulutlar
+  const cm = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, transparent: true, opacity: 0.9, flatShading: true });
+  for (let i = 0; i < 14; i++) {
+    const g = new THREE.Group();
+    for (let k = 0; k < 5; k++) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(2.5, 5), 0), cm); b.position.set(k * 3 - 6, rand(-1, 1.5), rand(-2, 2)); g.add(b); }
+    g.position.set(rand(-150, 150), rand(45, 65), rand(-120, 80)); g.userData.v = rand(0.6, 1.6);
+    scene.add(g); clouds.push(g);
+  }
+  // Villa tepesi
+  const hill = new THREE.Mesh(new THREE.CylinderGeometry(20, 26, 4, 10), mat('#6f8a5c', { flatShading: true }));
+  hill.position.set(VILLA.x, 2, VILLA.z); hill.receiveShadow = true; scene.add(hill);
+  for (let i = 0; i < 10; i++) { const a = Math.random() * Math.PI * 2; tree(VILLA.x + Math.cos(a) * 17, VILLA.z + Math.sin(a) * 17); }
   // Oyuncu arsaları (boş parseller)
   for (let s = 0; s < GRID.cols * GRID.rows; s++) {
     const p = slotPos(s);
@@ -128,7 +173,10 @@ function buildWorld() {
   for (const tone of tones) cityMat.push(new THREE.MeshStandardMaterial({ color: tone, roughness: 0.9, map: winTex, emissive: '#ffcf7a', emissiveMap: windowTexture(true, 0), emissiveIntensity: 0 }));
   for (let gx = -5; gx < GRID.cols + 5; gx++) for (let gz = -5; gz < GRID.rows + 5; gz++) {
     if (gx >= 0 && gx < GRID.cols && gz >= 0 && gz < GRID.rows) continue;
+    if (Object.values(RESERVED).some(([a, b]) => a === gx && b === gz)) continue;
     const x = cx(gx), z = cz(gz);
+    if (z > BEACH_Z - 6) continue;
+    if (Math.hypot(x - VILLA.x, z - VILLA.z) < 30) continue;
     const dist = Math.hypot(x, z);
     if (dist > 95) continue;
     const n = Math.random() < 0.5 ? 1 : 2;
@@ -147,9 +195,17 @@ function buildWorld() {
   }
   for (let i = 0; i < 40; i++) {
     const a = Math.random() * Math.PI * 2, r = rand(100, 170);
+    if (Math.sin(a) * r > SEA_Z - 10) continue;
     const hill = new THREE.Mesh(new THREE.ConeGeometry(rand(10, 25), rand(8, 22), 6), mat('#6f8a5c'));
     hill.position.set(Math.cos(a) * r, 0, Math.sin(a) * r); scene.add(hill);
   }
+}
+
+function carMesh(color) {
+  const g = new THREE.Group();
+  const body = box(1.1, 0.45, 2.1, mat(color, { roughness: 0.4, metalness: 0.3 })); body.position.y = 0.4; g.add(body);
+  const cab = box(0.95, 0.4, 1.1, mat('#223', { roughness: 0.2 })); cab.position.set(0, 0.8, -0.1); g.add(cab);
+  return g;
 }
 
 function tree(x, z, parent = scene) {
@@ -250,6 +306,186 @@ function buildProject(p) {
   return g;
 }
 
+
+// ---------- Oyuncunun hayatı: ofis, arabalar, villa, yat, işletmeler ----------
+function textSign(text, bg = '#111', fg = '#f4c20d', w = 6, h = 1.4) {
+  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 120;
+  const g = cv.getContext('2d');
+  g.fillStyle = bg; g.fillRect(0, 0, 512, 120);
+  g.fillStyle = fg; g.font = 'bold 52px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(text.length > 18 ? text.slice(0, 17) + '…' : text, 256, 62);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: t, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.35, side: THREE.DoubleSide }));
+}
+const cell = ([a, b]) => new THREE.Vector3(cx(a), 0, cz(b));
+
+function glassMat(color = '#6fa8c9') { return new THREE.MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.6 }); }
+
+function buildOffice(g, level, firma) {
+  const p = cell(RESERVED.ofis);
+  const o = new THREE.Group(); o.position.copy(p);
+  let h;
+  if (level === 0) {
+    const c = box(5, 2.4, 2.4, mat('#d8d2c0')); c.position.y = 1.2; o.add(c);
+    const win = box(1.4, 0.8, 0.05, glassMat()); win.position.set(1, 1.5, 1.23); o.add(win);
+    h = 2.4;
+  } else if (level === 1) {
+    h = 3 * FLOOR_H * 1.3;
+    const b = box(8, h, 6, mat('#e8e2d4')); b.position.y = h / 2; o.add(b);
+    for (let f = 0; f < 3; f++) { const w = box(8.05, 0.5, 6.05, glassMat('#4b7a99')); w.position.y = f * h / 3 + 1.2; o.add(w); }
+  } else {
+    h = 14;
+    const b = box(8, h, 8, glassMat('#3d7ea6')); b.position.y = h / 2; o.add(b);
+    const crown = box(8.4, 0.6, 8.4, mat('#222')); crown.position.y = h + 0.3; o.add(crown);
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 0.1, 20), mat('#333')); pad.position.y = h + 0.65; o.add(pad);
+  }
+  const sign = textSign(firma || 'İNŞAAT', '#111', '#f4c20d', 7, 1.4);
+  sign.position.set(0, h + 1.4, 0); o.add(sign);
+  const sign2 = sign.clone(); sign2.rotation.y = Math.PI; o.add(sign2);
+  const lbl = labelSprite('🏢 Senin ofisin', '#f4c20d'); lbl.position.set(0, h + 4, 0); lbl.scale.set(6.5, 1.2, 1); o.add(lbl);
+  g.add(o);
+  return p;
+}
+
+function buildMercedes(color) {
+  const g = new THREE.Group();
+  const body = box(1.6, 0.55, 3.4, mat(color, { roughness: 0.15, metalness: 0.8 })); body.position.y = 0.5; g.add(body);
+  const cab = box(1.4, 0.5, 1.8, mat('#0b0f18', { roughness: 0.05, metalness: 0.9 })); cab.position.set(0, 1.0, -0.2); g.add(cab);
+  const star = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.03, 6, 16), mat('#ddd', { metalness: 1, roughness: 0.2 })); star.position.set(0, 0.62, 1.72); g.add(star);
+  return g;
+}
+
+function buildVilla(g, heli) {
+  const v = new THREE.Group(); v.position.set(VILLA.x, 4, VILLA.z);
+  const white = mat('#f7f5ef'), wood = mat('#8a5a3b');
+  const a = box(10, 3, 7, white); a.position.set(0, 1.5, 0); v.add(a);
+  const b = box(6, 3, 6, white); b.position.set(2, 4.5, -0.5); v.add(b);
+  const glass = box(9.5, 2.2, 0.1, glassMat('#9fd3f0')); glass.position.set(0, 1.5, 3.55); v.add(glass);
+  const deck = box(12, 0.2, 5, wood); deck.position.set(0, 0.1, 6); v.add(deck);
+  const pool = new THREE.Mesh(new THREE.BoxGeometry(6, 0.25, 3), new THREE.MeshStandardMaterial({ color: '#35c0e8', roughness: 0.05, emissive: '#0b5c7a', emissiveIntensity: 0.4 }));
+  pool.position.set(-1, 0.2, 6.2); v.add(pool);
+  for (const x of [-7, 7]) { const palm = box(0.35, 5, 0.35, mat('#7a5230')); palm.position.set(x, 2.5, 6); v.add(palm); const lf = new THREE.Mesh(new THREE.ConeGeometry(2, 1, 6), mat('#3f8f3a', { flatShading: true })); lf.position.set(x, 5.2, 6); v.add(lf); }
+  if (heli) {
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 0.15, 24), mat('#444')); pad.position.set(-9, 0.1, -5); v.add(pad);
+    const H = new THREE.Group(); H.position.set(-9, 0.2, -5);
+    const body = new THREE.Mesh(new THREE.SphereGeometry(1.1, 12, 10), mat('#1d3557', { metalness: 0.5, roughness: 0.3 })); body.scale.set(1, 0.8, 1.5); body.position.y = 1.1; H.add(body);
+    const tail = box(0.25, 0.25, 3, mat('#1d3557')); tail.position.set(0, 1.3, -2.4); H.add(tail);
+    const rotor = box(6, 0.05, 0.25, mat('#111')); rotor.position.y = 2.1; H.add(rotor); rotors.push(rotor);
+    v.add(H);
+  }
+  const lbl = labelSprite('🏡 Villan', '#35c0e8'); lbl.position.set(0, 9, 0); lbl.scale.set(5, 1, 1); v.add(lbl);
+  g.add(v);
+}
+
+function buildYacht(g) {
+  const y = new THREE.Group(); y.position.set(28, 0.2, SEA_Z + 22);
+  const hull = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.2, 12, 8, 1), mat('#fbfbfb', { roughness: 0.3 })); hull.rotation.z = Math.PI / 2; hull.scale.set(1, 1, 0.6); hull.position.y = 0.6; y.add(hull);
+  const deck = box(7, 1.2, 2.4, mat('#f4f4f4')); deck.position.set(-0.5, 1.9, 0); y.add(deck);
+  const win = box(6, 0.4, 2.45, mat('#111', { roughness: 0.1 })); win.position.set(-0.5, 2.0, 0); y.add(win);
+  const top = box(3.5, 0.9, 2, mat('#f4f4f4')); top.position.set(-1, 3, 0); y.add(top);
+  const lbl = labelSprite('🛥️ Yatın', '#35c0e8'); lbl.position.set(0, 6, 0); lbl.scale.set(4.5, 0.9, 1); y.add(lbl);
+  g.add(y); yacht = y;
+}
+
+function bizLabel(o, text, h) { const l = labelSprite(text, '#9ad17a'); l.position.set(0, h, 0); l.scale.set(6, 1.15, 1); o.add(l); }
+
+function buildBiz(g, key) {
+  const o = new THREE.Group();
+  if (key === 'otel') o.position.set(OTEL.x, 0, OTEL.z); else o.position.copy(cell(RESERVED[key]));
+  if (key === 'galeri') {
+    const b = box(10, 3, 7, glassMat('#9fc6db')); b.position.y = 1.5; o.add(b);
+    const roof = box(10.4, 0.3, 7.4, mat('#222')); roof.position.y = 3.15; o.add(roof);
+    const s = textSign('OTO GALERİ', '#c1121f', '#fff', 6, 1.1); s.position.set(0, 3.9, 3.8); o.add(s);
+    ['#111', '#c1121f', '#eee', '#1d3557'].forEach((c, i) => { const m = buildMercedes(c); m.scale.setScalar(0.8); m.position.set(-3.6 + i * 2.4, 0, 5.4); o.add(m); });
+    bizLabel(o, '🏎️ Galerin', 7);
+  } else if (key === 'dugun') {
+    const b = box(11, 4, 8, mat('#fff4f8')); b.position.y = 2; o.add(b);
+    const s = textSign('DÜĞÜN SALONU', '#ff4d8d', '#fff', 7, 1.3); s.position.set(0, 4.9, 4.05); o.add(s);
+    for (let i = 0; i < 12; i++) { const l = new THREE.Mesh(new THREE.SphereGeometry(0.15, 6, 6), new THREE.MeshStandardMaterial({ color: '#ffd', emissive: ['#ff4d8d', '#ffd166', '#06d6a0'][i % 3], emissiveIntensity: 1.5 })); l.position.set(-5.2 + i * 0.95, 4.1, 4.1); o.add(l); }
+    bizLabel(o, '💒 Düğün salonun', 8);
+  } else if (key === 'tv') {
+    const b = box(7, 6, 7, mat('#d0d5dd')); b.position.y = 3; o.add(b);
+    const mast = box(0.4, 14, 0.4, mat('#c1121f')); mast.position.set(2, 13, 2); o.add(mast);
+    for (let i = 0; i < 4; i++) { const r = box(0.45, 1.5, 0.45, mat('#fff')); r.position.set(2, 8 + i * 3.4, 2); o.add(r); }
+    const dish = new THREE.Mesh(new THREE.SphereGeometry(1.4, 12, 8, 0, Math.PI * 2, 0, Math.PI / 3), mat('#eee')); dish.position.set(-2, 6.5, 0); dish.rotation.x = -1; o.add(dish);
+    const s = textSign('KANAL 1', '#1d3557', '#fff', 4.5, 1.1); s.position.set(0, 5, 3.55); o.add(s);
+    bizLabel(o, '📺 TV kanalın', 22);
+  } else if (key === 'kulup') {
+    const field = new THREE.Mesh(new THREE.PlaneGeometry(10, 6.5), mat('#3c9a3c')); field.rotation.x = -Math.PI / 2; field.position.y = 0.06; o.add(field);
+    const ln = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 6.5), mat('#fff')); ln.rotation.x = -Math.PI / 2; ln.position.y = 0.07; o.add(ln);
+    for (const z of [-4.2, 4.2]) { const st = box(11, 1.6, 1.4, mat('#f4c20d')); st.position.set(0, 0.8, z); o.add(st); }
+    for (const x of [-6, 6]) { const lt = box(0.2, 7, 0.2, mat('#666')); lt.position.set(x, 3.5, -5); o.add(lt); const lamp = box(1.2, 0.6, 0.3, new THREE.MeshStandardMaterial({ color: '#fff', emissive: '#fff', emissiveIntensity: 1 })); lamp.position.set(x, 7, -5); o.add(lamp); }
+    bizLabel(o, '⚽ Kulübün', 9);
+  } else if (key === 'beton') {
+    for (let i = 0; i < 3; i++) { const si = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 7, 12), mat('#b9bec4', { metalness: 0.4 })); si.position.set(-3 + i * 3, 5, -2); si.castShadow = true; o.add(si); const cone = new THREE.Mesh(new THREE.ConeGeometry(1.3, 1.5, 12), mat('#b9bec4')); cone.rotation.x = Math.PI; cone.position.set(-3 + i * 3, 0.9, -2); o.add(cone); }
+    const belt = box(0.6, 0.4, 9, mat('#555')); belt.position.set(4, 3, 0); belt.rotation.x = -0.4; o.add(belt);
+    const truck = new THREE.Group(); const cabin = box(1.6, 1.4, 1.6, mat('#f4c20d')); cabin.position.set(0, 1, 1.8); truck.add(cabin);
+    const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.7, 3, 10), mat('#e8e8e8')); drum.rotation.x = Math.PI / 2 - 0.2; drum.position.set(0, 1.5, -0.4); truck.add(drum);
+    truck.position.set(0, 0, 4); o.add(truck);
+    const s = textSign('HAZIR BETON', '#333', '#f4c20d', 5, 1); s.position.set(0, 9.4, -2); o.add(s);
+    bizLabel(o, '🏭 Beton santralin', 12);
+  } else if (key === 'otel') {
+    const b = box(14, 8, 6, mat('#fdfaf3')); b.position.set(0, 4, -3); o.add(b);
+    for (let f = 0; f < 4; f++) { const bal = box(14.2, 0.2, 6.8, glassMat('#9fd3f0')); bal.position.set(0, 1.9 + f * 2, -2.6); o.add(bal); }
+    const pool = new THREE.Mesh(new THREE.BoxGeometry(8, 0.2, 3), new THREE.MeshStandardMaterial({ color: '#35c0e8', roughness: 0.05, emissive: '#0b5c7a', emissiveIntensity: 0.4 })); pool.position.set(0, 0.12, 2.6); o.add(pool);
+    const s = textSign('BOUTIQUE HOTEL', '#0b3954', '#fff', 7, 1.1); s.position.set(0, 8.9, 0.05); o.add(s);
+    bizLabel(o, '🏨 Otelin', 12);
+  }
+  g.add(o);
+}
+
+function officeLevel(state) { return state.completed >= 5 ? 2 : state.completed >= 2 ? 1 : 0; }
+
+function syncAssets(state) {
+  const owned = Object.keys(state.owned || {}).sort();
+  const sig = [owned.join(','), officeLevel(state), state.firma || ''].join('|');
+  if (sig === assetSig) return;
+  assetSig = sig;
+  if (assetGroup) { scene.remove(assetGroup); assetGroup.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); }
+  rotors = []; yacht = null;
+  assetGroup = new THREE.Group();
+  const op = buildOffice(assetGroup, officeLevel(state), state.firma);
+  const has = (k) => owned.includes(k);
+  let slot = 0;
+  const park = (m) => { m.position.set(op.x - 3 + slot * 2.3, 0, op.z + 5.5); slot++; assetGroup.add(m); };
+  if (!has('mercedes') && !has('range')) { const kam = carMesh('#8a9aa8'); kam.scale.setScalar(1.3); park(kam); }
+  if (has('mercedes')) park(buildMercedes('#0c0c0c'));
+  if (has('range')) { const r = buildMercedes('#2f3e2f'); r.scale.set(1.05, 1.3, 0.95); park(r); }
+  if (has('villa')) buildVilla(assetGroup, has('helikopter'));
+  else if (has('helikopter')) buildVilla(assetGroup, true);
+  if (has('yat')) buildYacht(assetGroup);
+  for (const k of ['galeri', 'dugun', 'tv', 'kulup', 'beton', 'otel']) if (has(k)) buildBiz(assetGroup, k);
+  assetGroup.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  scene.add(assetGroup);
+}
+
+// ---------- Efektler ----------
+function burst(pos, colors, n, speed, life, gravity, size = 0.35) {
+  const geo = new THREE.BufferGeometry();
+  const arr = new Float32Array(n * 3), col = new Float32Array(n * 3), vel = [];
+  const c = new THREE.Color();
+  for (let i = 0; i < n; i++) {
+    arr[i * 3] = pos.x; arr[i * 3 + 1] = pos.y; arr[i * 3 + 2] = pos.z;
+    const th = Math.random() * Math.PI * 2, ph = Math.acos(rand(-1, 1)), sp = speed * rand(0.5, 1);
+    vel.push([Math.sin(ph) * Math.cos(th) * sp, Math.abs(Math.cos(ph)) * sp * (gravity > 0 ? 0.6 : 1), Math.sin(ph) * Math.sin(th) * sp]);
+    c.set(colors[i % colors.length]); col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const m = new THREE.Points(geo, new THREE.PointsMaterial({ size, vertexColors: true, transparent: true, opacity: 1, depthWrite: false }));
+  scene.add(m);
+  particles.push({ m, vel, t: 0, life, gravity });
+}
+
+export function fireworks(state) {
+  const done = state.projects.filter((p) => p.done && !p.collapsed && p.slot >= 0).sort((a, b) => (b.doneAt ?? 0) - (a.doneAt ?? 0))[0];
+  const base = done ? slotPos(done.slot) : new THREE.Vector3();
+  const h = done ? done.floors * FLOOR_H + 6 : 12;
+  for (let i = 0; i < 5; i++) setTimeout(() => burst(base.clone().add(new THREE.Vector3(rand(-5, 5), h + rand(0, 6), rand(-5, 5))), [['#ff595e', '#ffca3a'], ['#8ac926', '#1982c4'], ['#6a4c93', '#ffffff']][i % 3], 120, 9, 1.8, 6, 0.45), i * 280);
+}
+
+function dust(pos) { burst(pos.clone().add(new THREE.Vector3(0, 2, 0)), ['#9a938a', '#b8b1a6', '#7c766e'], 260, 6, 3.2, -0.6, 1.2); }
+
 function disposeGroup(g) {
   scene.remove(g);
   g.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
@@ -271,6 +507,7 @@ export function sync(state) {
     scene.add(g); groups.set(p.id, g);
   }
   for (const [id, g] of groups) if (!seen.has(id)) { disposeGroup(g); groups.delete(id); }
+  syncAssets(state);
 }
 
 export function focus(p) {
@@ -282,7 +519,7 @@ export function focus(p) {
 export function quake(power, collapseIds, done) {
   shake = 2.5 + power * 2;
   sinking = [];
-  for (const id of collapseIds) { const g = groups.get(id); if (g) sinking.push({ g, t: 0 }); }
+  for (const id of collapseIds) { const g = groups.get(id); if (g) { sinking.push({ g, t: 0 }); setTimeout(() => dust(g.position), 900); } }
   setTimeout(() => { sinking = []; done && done(); }, 2600);
 }
 
@@ -302,6 +539,26 @@ function tick() {
   const dt = Math.min(0.05, clock.getDelta());
   const t = clock.elapsedTime;
   for (const c of cranes) c.rotation.y += dt * 0.25;
+  for (const c of cars) {
+    const u = c.userData, k = u.vertical ? 'z' : 'x';
+    c.position[k] += u.dir * u.speed * dt;
+    if (c.position[k] > u.max) c.position[k] = u.min; else if (c.position[k] < u.min) c.position[k] = u.max;
+  }
+  for (const cl of clouds) { cl.position.x += cl.userData.v * dt; if (cl.position.x > 170) cl.position.x = -170; }
+  for (const r of rotors) r.rotation.y += dt * 18;
+  if (yacht) { yacht.position.y = 0.2 + Math.sin(t * 1.3) * 0.15; yacht.rotation.z = Math.sin(t * 0.9) * 0.03; }
+  if (seaMesh) seaMesh.position.y = 0.08 + Math.sin(t * 0.8) * 0.05;
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i]; p.t += dt;
+    const a = p.m.geometry.attributes.position;
+    for (let j = 0; j < p.vel.length; j++) {
+      const v = p.vel[j]; v[1] -= p.gravity * dt * 3; v[0] *= 0.985; v[2] *= 0.985;
+      a.array[j * 3] += v[0] * dt; a.array[j * 3 + 1] += v[1] * dt; a.array[j * 3 + 2] += v[2] * dt;
+    }
+    a.needsUpdate = true;
+    p.m.material.opacity = Math.max(0, 1 - p.t / p.life);
+    if (p.t > p.life) { scene.remove(p.m); p.m.geometry.dispose(); particles.splice(i, 1); }
+  }
   // Gün döngüsü (~3 dk)
   const day = (Math.sin(t * 0.035) + 1) / 2;
   const dayCol = new THREE.Color('#9cc7e8'), nightCol = new THREE.Color('#141b2d'), dusk = new THREE.Color('#e59866');

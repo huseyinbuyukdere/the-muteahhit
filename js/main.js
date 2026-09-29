@@ -2,6 +2,9 @@
 import * as E from './engine.js';
 import * as S3 from './scene3d.js';
 import { REHBER, KAYNAKLAR } from './data/rehber.js';
+import { reactionFor } from './data/dialect.js';
+import { FIRMA_ADLARI } from './data/lux.js';
+import * as SFX from './sfx.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -14,6 +17,7 @@ const STATS = [
 const LBL = { n: 'Kasa', b: 'Borç', i: 'İtibar', g: 'Yatırımcı güveni', e: 'Ekip', r: 'Hukuki risk', v: 'Vicdan', k: 'Kalite', p: 'İlerleme', m: 'Mağdur', d: 'Gecikme', s: 'Arsa sahibi memnuniyeti', h: 'Arsa sahibi payı', o: 'Ön satış', x: 'Vergiden kaçırılan', y: 'Yatırımcı parası', a: 'Piyasa' };
 const INVERT = new Set(['b', 'r', 'm', 'd', 'h']);
 const NEUTRAL = new Set(['y', 'x', 'o']);
+const BANNER = { genel: 'SON DAKİKA', kacis: 'ŞOK', cark: 'ALARM', hayat: 'MAGAZİN', teslim: 'ANAHTAR GÜNÜ' };
 const PHASE_TXT = { arsa: 'Arsa pazarlığı', yatirim: 'Yatırımcı arayışı', insaat: 'İnşaat', satis: 'Satış', teslim: 'Teslim', bitti: 'Teslim edildi' };
 const FACTS = [
   'Satış vaadi sözleşmesini noterde yapın ve tapuya şerh ettirin',
@@ -31,6 +35,10 @@ function boot() {
   try { S3.init($('scene')); sceneOk = true; } catch (e) { console.warn('3D başlatılamadı', e); }
   $('loading').classList.add('hidden');
   if (E.load()) $('devamKariyerBtn').classList.remove('hidden');
+  try { $('firmaInput').value = localStorage.getItem('muteahhit-firma') || ''; } catch { /* yok say */ }
+  $('firmaInput').placeholder = FIRMA_ADLARI[Math.floor(Math.random() * FIRMA_ADLARI.length)];
+  $('muteBtn').textContent = SFX.isMuted() ? '🔇' : '🔊';
+  $('muteBtn').onclick = () => { $('muteBtn').textContent = SFX.toggleMute() ? '🔇' : '🔊'; };
   $('yeniBtn').onclick = () => startGame(false);
   $('devamKariyerBtn').onclick = () => startGame(true);
   $('yenidenBtn').onclick = () => { $('ending').classList.add('hidden'); startGame(false); };
@@ -45,8 +53,7 @@ function boot() {
   if (window.innerWidth <= 860) $('side').classList.add('closed');
   document.querySelectorAll('.side-tabs button').forEach((b) => (b.onclick = () => {
     document.querySelectorAll('.side-tabs button').forEach((x) => x.classList.toggle('active', x === b));
-    $('projeler').classList.toggle('hidden', b.dataset.tab !== 'projeler');
-    $('gunluk').classList.toggle('hidden', b.dataset.tab !== 'gunluk');
+    for (const t of ['projeler', 'hayat', 'gunluk']) $(t).classList.toggle('hidden', b.dataset.tab !== t);
   }));
   document.addEventListener('keydown', onKey);
 }
@@ -57,11 +64,15 @@ function startGame(resume) {
   const saved = resume ? E.load() : null;
   if (saved && !saved.ending) {
     state = saved;
+    Object.assign(state, { owned: state.owned || {}, sins: state.sins || [], arcs: state.arcs || {}, arcT: state.arcT || {}, goals: state.goals || {}, firma: state.firma || 'Güven Yapı' });
     state.queue = (state.queue || []).map((c) => (c.quake ? E.quakeCard(state, c.quake, c.big) : c));
     card = E.drawCard(state);
   } else {
     E.clearSave();
     state = E.newGame();
+    const f = $('firmaInput').value.trim() || $('firmaInput').placeholder;
+    state.firma = f;
+    try { localStorage.setItem('muteahhit-firma', $('firmaInput').value.trim()); } catch { /* yok say */ }
     card = introCard();
   }
   if (sceneOk) S3.sync(state);
@@ -72,9 +83,10 @@ function startGame(resume) {
 function introCard() {
   return {
     kind: 'sys', phase: 'sistem', title: `${E.dateLabel(0)} — Kariyerin Başlıyor`, noStep: true,
+    speaker: { emoji: '👴', name: 'Rahmetli babanın sözü', label: '', roleLabel: '', quote: 'Oğlum, bina dediğin içinde insan yaşayacak yerdir. Parayı kazanırsın, adını bir kere kaybedersen bulamazsın.' },
     text: 'Elinde babandan kalma bir kamyonet, bir kalfalık tecrübesi ve 8 milyon lira var. Şehir büyüyor, eski evler yıkılıyor, herkes müteahhit olmak istiyor. Arsa sahipleriyle anlaş, yatırımcı bul, binanı dik, sat. Sözünü tutabilirsin… ya da tutmayabilirsin.',
     ders: 'Bu oyundaki her senaryo, gerçek hayatta yaşanmış ya da haberlere yansımış bir yöntemden esinlenir. Her seçimden sonra, o yöntemin gerçek hayattaki karşılığını ve nasıl korunacağınızı göreceksiniz.',
-    choices: [{ label: 'Kolları sıva', fx: '', result: 'Kartvizitlerin basıldı: "… İnşaat — Güvenin Adresi".' }],
+    choices: [{ label: 'Kolları sıva', fx: '', result: `Kartvizitlerin basıldı: "${state.firma} — Güvenin Adresi".` }],
   };
 }
 
@@ -87,6 +99,16 @@ function render() {
   $('piyasa').textContent = `${s.market >= 1 ? '▲' : '▼'} ${Math.round(s.market * 100)}`;
   $('magdur').textContent = s.m.toLocaleString('tr-TR');
   $('magdur').className = s.m > 0 ? 'neg' : '';
+  $('dosya').textContent = `🗄️ ${(s.sins || []).length}`;
+  $('dosya').className = (s.sins || []).length ? 'neg' : '';
+  const a = E.ahlak(s);
+  $('ahlakPin').style.top = `${100 - a}%`; $('ahlakPin').style.setProperty('--ahlak', `${a}%`);
+  $('ahlakPin').style.background = a >= 60 ? '#46a758' : a >= 35 ? '#f4a20d' : '#e5484d';
+  $('ahlakLbl').textContent = E.ahlakEtiket(a);
+  $('ahlakLbl').style.color = a >= 60 ? '#9be3a6' : a >= 35 ? '#ffd27a' : '#ff9ea1';
+  const g = E.nextGoal(s);
+  $('goal').innerHTML = g ? `🎯 <b>Hedef:</b> ${esc(g.ad)} <small>(${Object.keys(s.goals || {}).length}/${E.GOALS.length})</small>` : '🏆 Bütün hedefler tamam!';
+  renderHayat();
   $('stats').innerHTML = STATS.map(([k, l, c, inv]) => {
     const v = Math.round(s[k]);
     const col = inv ? (v > 70 ? '#e5484d' : v > 40 ? '#f4a20d' : '#46a758') : c;
@@ -95,7 +117,8 @@ function render() {
   renderProjects();
   $('gunluk').innerHTML = s.log.map((l) => `<div class="log-line">${esc(l)}</div>`).join('') || '<p class="log-line">Henüz bir şey olmadı.</p>';
   const news = [...s.news, ...FACTS];
-  $('tickerText').textContent = news.map((n) => `● ${n}`).join('     ');
+  const tt = news.map((n) => `● ${n}`).join('     ');
+  if ($('tickerText').textContent !== tt) $('tickerText').textContent = tt;
   $('kacBtn').classList.toggle('hidden', !E.canFlee(s));
   $('yeniProjeBtn').disabled = !E.canStartProject(s);
   $('yeniProjeBtn').title = E.canStartProject(s) ? '' : `Aynı anda en fazla ${E.maxConcurrent(s)} proje yürütebilirsin (bitirdikçe artar).`;
@@ -126,6 +149,61 @@ function renderProjects() {
   }));
 }
 
+function renderHayat() {
+  const s = state;
+  const inc = E.luxMonthly(s);
+  const rows = Object.entries(E.LUX).map(([k, it]) => {
+    const own = s.owned && s.owned[k];
+    const locked = s.completed < it.min;
+    const para = [it.gelir ? `+${E.fmt(it.gelir)}/ay` : '', it.gider ? `−${E.fmt(it.gider)}/ay` : ''].filter(Boolean).join(' · ');
+    const btn = own ? `<button data-sell="${k}">Sat (${E.fmt(it.fiyat / 2)})</button>`
+      : locked ? `<button disabled>🔒 ${it.min} proje bitir</button>`
+      : `<button data-buy="${k}" class="${E.canBuy(s, k) ? 'primary' : ''}" ${E.canBuy(s, k) ? '' : 'disabled'}>Al · ${E.fmt(it.fiyat)}</button>`;
+    return `<div class="lux ${own ? 'own' : ''} ${locked ? 'locked' : ''}"><div class="lux-ic">${it.ikon}</div><div class="lux-b"><b>${esc(it.ad)}</b><small>${it.tur === 'is' ? 'Yan iş' : 'Lüks'}${para ? ' · ' + para : ''}</small><p>${esc(it.a)}</p>${btn}</div></div>`;
+  }).join('');
+  $('hayat').innerHTML = `<p class="log-line">Aylık yan gelir/gider: <b class="${inc >= 0 ? 'pos' : 'neg'}">${E.fmt(inc)}</b></p>${rows}`;
+  $('hayat').querySelectorAll('[data-buy]').forEach((b) => (b.onclick = () => {
+    const r = E.buyLux(state, b.dataset.buy);
+    if (!r) return;
+    SFX.play('coin');
+    floatMoney(-E.LUX[b.dataset.buy].fiyat);
+    toast(`${E.LUX[b.dataset.buy].ikon} ${E.LUX[b.dataset.buy].ad} artık senin!`);
+    for (const e of r.events) if (e[0] === 'goal') { toast(`🎯 Hedef tamam: ${e[1]}`, 'goal'); SFX.play('goal'); }
+    afterChange();
+  }));
+  $('hayat').querySelectorAll('[data-sell]').forEach((b) => (b.onclick = () => {
+    const v = E.sellLux(state, b.dataset.sell);
+    if (v == null) return;
+    SFX.play('coin'); floatMoney(v);
+    afterChange();
+  }));
+}
+
+function afterChange() {
+  if (sceneOk) S3.sync(state);
+  render();
+  if (!state.ending) E.save(state);
+}
+
+function toast(txt, cls = '') {
+  const d = document.createElement('div');
+  d.className = `toast ${cls}`; d.textContent = txt;
+  $('toasts').appendChild(d);
+  setTimeout(() => d.classList.add('out'), 3200);
+  setTimeout(() => d.remove(), 3800);
+}
+
+function floatMoney(v) {
+  if (Math.abs(v) < 0.01) return;
+  const r = $('nakit').getBoundingClientRect();
+  const d = document.createElement('div');
+  d.className = `float ${v >= 0 ? 'pos' : 'neg'}`;
+  d.textContent = `${v >= 0 ? '+' : ''}${E.fmt(v)}`;
+  d.style.left = `${r.left + r.width / 2}px`; d.style.top = `${r.bottom + 4}px`;
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 1800);
+}
+
 function showCard(c) {
   card = c; mode = 'choose';
   const proj = c.projId != null ? state.projects.find((p) => p.id === c.projId) : null;
@@ -134,13 +212,26 @@ function showCard(c) {
   $('cardPhase').className = `tag ${c.phase}`;
   $('cardProj').textContent = proj ? `${proj.name} · ${proj.semt}` : E.dateLabel(state.t);
   $('cardTitle').textContent = c.title;
+  const ban = c.banner || BANNER[c.phase];
+  $('cardBanner').textContent = ban ? `🔴 ${ban}` : '';
+  $('cardBanner').classList.toggle('hidden', !ban);
+  const sp = c.speaker;
+  $('speaker').classList.toggle('hidden', !sp);
+  if (sp) {
+    $('spEmoji').textContent = sp.emoji || '🗣️';
+    $('spName').textContent = sp.name;
+    $('spMeta').textContent = [sp.roleLabel, sp.label].filter(Boolean).join(' · ');
+    $('spQuote').textContent = `“${sp.quote}”`;
+  }
   $('cardText').textContent = c.text;
   $('cardTwist').textContent = c.twist ? `⚠ ${c.twist}` : '';
   $('cardTwist').classList.toggle('hidden', !c.twist);
   $('choices').innerHTML = '';
   c.choices.forEach((ch, i) => {
     const b = document.createElement('button');
-    b.innerHTML = `<b>${i + 1}.</b> ${esc(ch.label)}`;
+    const risky = ch.act?.type === 'gamble' || (ch.act?.type === 'esc' && (ch.act.end || ch.act.risk));
+    b.innerHTML = `<b>${i + 1}.</b> ${esc(ch.label)}${risky && !/🎲/.test(ch.label) ? ' 🎲' : ''}`;
+    if (risky) b.classList.add('risky');
     b.onclick = () => choose(i);
     $('choices').appendChild(b);
   });
@@ -155,16 +246,46 @@ function choose(i) {
   mode = 'result';
   const c = card;
   const before = Object.fromEntries(STATS.map(([k]) => [k, state[k]]));
+  const n0 = state.n;
   const res = E.resolve(state, c, i);
   if (res.noTime) { render(); showCard(E.drawCard(state)); return; }
+  // Konuşan kişinin tepkisi (şivesiyle)
+  const mood = res.deltas.reduce((a, [k, v]) => a + (k === 'v' ? v : k === 's' ? v * 0.7 : k === 'e' && c.speaker?.role === 'US' ? v : k === 'm' ? -v * 3 : 0), 0);
+  const rx = c.kind === 'tpl' && c.speaker ? reactionFor(c.speaker, mood >= 0 ? 1 : -1, state.t + i) : null;
+  $('reaction').classList.toggle('hidden', !rx);
+  if (rx) { $('rxEmoji').textContent = c.speaker.emoji; $('rxQuote').innerHTML = `<b>${esc(c.speaker.name)}:</b> “${esc(rx)}”`; $('reaction').className = `speaker reaction ${mood >= 0 ? 'good' : 'bad'}`; }
   $('choices').classList.add('hidden');
   $('resultBox').classList.remove('hidden');
-  $('resultText').textContent = res.result;
+  $('resultText').textContent = (res.gamble === true ? '🎲 TUTTU! ' : res.gamble === false ? '🎲 TUTMADI! ' : '') + res.result;
   $('deltas').innerHTML = deltaChips(res.deltas);
   $('events').innerHTML = res.events.filter((e) => e[0] !== 'faiz').map(eventLine).join('');
   $('ders').innerHTML = c.ders ? `💡 <b>Gerçek hayatta:</b> ${esc(c.ders)}` : '';
   $('ders').classList.toggle('hidden', !c.ders);
   $('devamBtn').textContent = state.ending ? 'Sonu gör ▸' : 'Devam ▸';
+  // Sıradaki ayın merak uyandıran fragmanı
+  $('teaser').classList.add('hidden');
+  if (!state.ending) {
+    const nx = E.drawCard(state);
+    state.queue.unshift(nx);
+    const who = nx.speaker ? `${nx.speaker.emoji} ${nx.speaker.name}` : '📞 Telefon çalıyor';
+    $('teaser').innerHTML = `<small>SIRADAKİ</small> ${esc(who)} — <b>${esc(nx.title)}</b>`;
+    $('teaser').classList.remove('hidden');
+  }
+  const dn = state.n - n0;
+  floatMoney(dn);
+  if (res.gamble != null) SFX.play('dice');
+  if (c.quake) SFX.play('rumble');
+  else if (state.ending === 'iade') SFX.play('siren');
+  else if (state.ending === 'kacak') SFX.play('plane');
+  else if (state.ending) SFX.play(['patron', 'emekli'].includes(state.ending) ? 'win' : 'bad');
+  else if (res.gamble === false || mood < -6) SFX.play('bad');
+  else if (dn > 0.5) SFX.play('coin');
+  else SFX.play('click');
+  for (const e of res.events) {
+    if (e[0] === 'goal') { toast(`🎯 Hedef tamam: ${e[1]}`, 'goal'); SFX.play('goal'); }
+    if (e[0] === 'sin') toast('⏳ Bu karar dosyaya girdi…', 'sin');
+  }
+  if (sceneOk && res.events.some((e) => e[0] === 'info' && /tamamlandı!/.test(e[1]))) S3.fireworks?.(state);
   if (sceneOk) {
     if (c.quake) {
       const col = (state.lastQuake?.collapsed || []).map((p) => p.id);
@@ -204,6 +325,9 @@ function eventLine(e) {
   if (t === 'satis') return `<li>🔑 ${n} daire satıldı: +${E.fmt(v)}</li>`;
   if (t === 'yatirimci') return `<li>🤝 Yatırımcılara geri ödeme (kâr payıyla): ${E.fmt(v)}</li>`;
   if (t === 'olu') return `<li class="olu">🕯️ ${esc(v)}</li>`;
+  if (t === 'sin') return `<li class="sin">⏳ Bu iş dosyaya girdi. Bir gün önüne gelecek…</li>`;
+  if (t === 'goal') return `<li class="goal-li">🎯 Hedef tamamlandı: ${esc(v)}</li>`;
+  if (t === 'lux') return `<li>${v >= 0 ? '💼 Yan işlerden gelir' : '💸 Lüks giderleri'}: ${E.fmt(v)}</li>`;
   return `<li>📌 ${esc(v)}</li>`;
 }
 
@@ -247,9 +371,18 @@ function showEnding() {
     [E.fmt(k === 'kacak' ? Math.max(net, s.kacirilan || 0) : net), k === 'kacak' ? 'Yanındaki para' : 'Net servet'],
     [s.m.toLocaleString('tr-TR'), 'Mağdur'], [E.fmt(s.vergi), 'Vergiden kaçırılan'],
     [s.cokme, 'Yıkılan bina'], [s.olu, 'Can kaybı'], [Math.round(s.v), 'Vicdan'],
+    [Object.keys(s.owned || {}).length, 'Lüks ve yan iş'], [(s.sins || []).length, 'Patlamamış dosya'], [Object.keys(s.goals || {}).length + '/' + E.GOALS.length, 'Hedef'],
   ];
   const yarim = E.activeProjects(s).length;
-  $('endingBody').innerHTML = `<div class="tone-${en.tone}"><p class="count">${E.unvan(s)}</p><h2>${en.title}</h2><p>${esc(en.text)}</p>
+  const dest = s.escape?.dest ? E.DEST[s.escape.dest] : null;
+  const extra = [
+    k === 'kacak' && dest ? `✈️ Şu an ${dest}'dasın. Yanında ${E.fmt(s.kacirilan || 0)} var. Arkanda ${s.m} mağdur.` : '',
+    k === 'iade' && dest ? `🚨 ${dest} yolunda yakalandın. Kaçırmaya çalıştığın ${E.fmt(s.kacirilan || 0)} el konuldu.` : '',
+    s.legacy ? `🏛️ ${E.LEGACY[s.legacy].text}` : '',
+  ].filter(Boolean).map((x) => `<p class="legacy">${esc(x)}</p>`).join('');
+  const a = E.ahlak(s);
+  $('endingBody').innerHTML = `<div class="tone-${en.tone}"><p class="count">${esc(s.firma || '')} · ${E.unvan(s)}</p><h2>${en.title}</h2><p>${esc(en.text)}</p>${extra}
+    <p class="count">Karnen: <b>${E.ahlakEtiket(a)}</b> (${a}/100)</p>
     ${yarim && (k === 'kacak' || k === 'iade' || k === 'iflas' || k === 'hapis') ? `<p><b>${yarim} proje yarım kaldı.</b> O binalarda oturmayı bekleyen aileler var.</p>` : ''}
     <div class="stat-grid">${stats.map(([v, l]) => `<div><b>${v}</b><small>${l}</small></div>`).join('')}</div>
     <p class="disclaimer">Oyundaki her yöntemin gerçek hayattaki karşılığını ve nasıl korunacağınızı Farkındalık Rehberi'nde bulabilirsiniz.</p></div>`;
@@ -270,6 +403,9 @@ function openModal(which) {
     <li><b>Teslim:</b> anahtarlar, arsa sahipleri ve yatırımcılarla hesaplaşma.</li></ol>
     <h3>Çark</h3>
     <p>Projeler bittikçe aynı anda daha fazla işe girebilirsin (Yeni Proje). Kasa eksiye düşerse bir işin parasını diğerine aktarmaya başlarsın. Hukuki risk ya da borç çok yükselirse <b>Kaç</b> düğmesi belirir.</p>
+    <h3>Hayatın</h3><p><b>Hayatım</b> sekmesinden Mercedes, villa, yat alabilir; galeri, düğün salonu, beton santrali, otel, TV kanalı gibi yan işler kurabilirsin. Her biri yeni olaylar ve yeni kirli fırsatlar getirir.</p>
+    <h3>Dolaptaki iskeletler</h3><p>Vicdansız kararların bazıları dosyaya girer (🗄️). Yıllar sonra bir gazeteci, eski bir usta ya da müfettiş kapını çalabilir.</p>
+    <h3>Kaçış ve son perde</h3><p>Kaçmaya karar verirsen dört adımlı bir kaçış operasyonu başlar: parayı topla, sınırdan geçir, rota seç, pasaport kontrolünden geç. Zengin olursan son perdede hesap günü ve miras kararı seni bekler.</p>
     <h3>Deprem</h3><p>Yaptığın binalar yıllar sonra bir depremde sınanır. Kalite düşükse, bunun bedelini insanlar öder; oyun da bunu hatırlatır.</p>
     <h3>Sonlar</h3><p>12 farklı son var: dürüst patron, dokunulmaz baron, kaçak, kırmızı bülten, cezaevi, iflas ve dahası. Kötü seçimler de kazanabilir. Kısayollar: 1-4 seçim, Enter devam.</p>`;
   } else if (which === 'rehber') {

@@ -5,11 +5,20 @@ import INSAAT from './data/insaat.js';
 import SATIS from './data/satis.js';
 import GENEL from './data/genel.js';
 import { CARK, KACIS, TESLIM } from './data/cark.js';
+import HAYAT from './data/hayat.js';
+import { INSAAT_EK, YATIRIM_EK, ARSA_EK, SATIS_EK, CARK_EK } from './data/ek.js';
 import { NAMES, SEMTLER, PROJE_ADLARI, TWISTS } from './data/names.js';
+import { LUX } from './data/lux.js';
+import { speakerFor } from './data/dialect.js';
+import { ARCS, ghostCard, escapeCard, hesapCard, mirasCard, GOALS, LEGACY, DEST } from './data/hikaye.js';
+export { LUX, GOALS, LEGACY, DEST, ARCS };
 
-export const TEMPLATES = { arsa: ARSA, yatirim: YATIRIM, insaat: INSAAT, satis: SATIS, teslim: TESLIM, cark: CARK, kacis: KACIS, genel: GENEL };
+export const TEMPLATES = {
+  arsa: [...ARSA, ...ARSA_EK], yatirim: [...YATIRIM, ...YATIRIM_EK], insaat: [...INSAAT, ...INSAAT_EK], satis: [...SATIS, ...SATIS_EK],
+  teslim: TESLIM, cark: [...CARK, ...CARK_EK], kacis: KACIS, genel: GENEL, hayat: HAYAT,
+};
 export const VARIANTS = 5;
-export const PHASE_LABEL = { arsa: "Arsa Sahipleri", yatirim: "Yatırımcı", insaat: "İnşaat", satis: "Satış", teslim: "Teslim", cark: "Çark", kacis: "Kaçış", genel: "Gündem", sistem: "Karar", bitti: "Teslim Edildi" };
+export const PHASE_LABEL = { arsa: "Arsa Sahipleri", yatirim: "Yatırımcı", insaat: "İnşaat", satis: "Satış", teslim: "Teslim", cark: "Çark", kacis: "Kaçış", genel: "Gündem", sistem: "Karar", bitti: "Teslim Edildi", hayat: "Hayatın", hikaye: "Hikâye", hesap: "Hesap" };
 const STEPS = { arsa: 3, yatirim: 2, insaat: 7, satis: 3 };
 export const START_YEAR = 2012;
 export const END_YEAR = 2036;
@@ -63,15 +72,33 @@ export function newGame() {
     vergi: 0, market: 1, projects: [], completed: 0, daireTeslim: 0, cokme: 0, olu: 0,
     flags: {}, recent: [], used: {}, seq: 1, queue: [], log: [], news: [], maxTier: 0,
     scriptedDone: {}, lastKacis: -99, lastWarn: -99, ending: null,
+    owned: {}, sins: [], arcs: {}, arcT: {}, arcsLast: 0, goals: {}, firma: "",
   };
 }
 
 export const activeProjects = (s) => s.projects.filter((p) => !p.done && !p.collapsed);
 export const maxScale = (s) => Math.max(1, ...activeProjects(s).map((p) => p.scale), TIERS[s.maxTier].scale * 0.5);
-export const netWorth = (s) => s.n - s.b;
+export const assetValue = (s) => Object.keys(s.owned || {}).reduce((a, k) => a + (LUX[k] ? LUX[k].fiyat * 0.6 : 0), 0);
+export const netWorth = (s) => s.n - s.b + assetValue(s);
+const lifeScale = (s) => 1 + (maxScale(s) - 1) * 0.3;
+
+// Genel ahlak göstergesi: 0 = dolandırıcı müteahhit, 100 = ahlaklı müteahhit
+export function ahlak(s) {
+  const x = s.v * 0.55 + (100 - s.r) * 0.15 + s.i * 0.1 + 20 - Math.min(35, s.m / 4) - Math.min(15, s.vergi / 3) - Math.min(15, (s.sins || []).length * 3) - Math.min(30, s.olu / 2);
+  return clamp(Math.round(x), 0, 100);
+}
+export function ahlakEtiket(a) {
+  if (a >= 85) return "Mahallenin Güvencesi";
+  if (a >= 70) return "Ahlaklı Müteahhit";
+  if (a >= 55) return "İdare Eder";
+  if (a >= 40) return "Kıvırtan Müteahhit";
+  if (a >= 25) return "Yapsatçı Çakal";
+  if (a >= 10) return "Dolandırıcı Müteahhit";
+  return "Kırmızı Bültenlik";
+}
 export const contractorUnits = (p) => Math.round((p.daire * (100 - p.pay)) / 100);
-export const unitPrice = (s, p) => 7.5 * s.market * (0.7 + p.kalite / 350 + s.i / 350);
-const costPerStep = (p) => (p.daire * 2.0 * (0.55 + p.kalite / 220)) / STEPS.insaat;
+export const unitPrice = (s, p) => 7.8 * s.market * (0.7 + p.kalite / 350 + s.i / 350);
+const costPerStep = (p, s) => (p.daire * 2.0 * (0.55 + p.kalite / 220)) / STEPS.insaat * (s && s.owned && s.owned.beton ? 0.88 : 1);
 
 export function unlockedTiers(s) {
   const t = [0];
@@ -80,8 +107,8 @@ export function unlockedTiers(s) {
   return t;
 }
 export const maxConcurrent = (s) => Math.min(4, 1 + Math.floor(s.completed / 2));
-export const canStartProject = (s) => activeProjects(s).length < maxConcurrent(s) && s.i >= 15 && !s.ending;
-export const canFlee = (s) => !s.ending && (s.r >= 50 || netWorth(s) < -12 * maxScale(s) || s.flags.kacisHazir);
+export const canStartProject = (s) => activeProjects(s).length < maxConcurrent(s) && s.i >= 15 && !s.ending && !s.escape && !s.finalStarted;
+export const canFlee = (s) => !s.ending && !s.escape && !s.finalStarted && (s.r >= 50 || netWorth(s) < -12 * maxScale(s) || s.flags.kacisHazir);
 
 export function unvan(s) {
   const w = netWorth(s);
@@ -120,7 +147,8 @@ export function createProject(s, tier, semt, ad) {
 }
 
 function pushLog(s, txt) { s.log.unshift(`${dateLabel(s.t)} — ${txt}`); s.log.length = Math.min(s.log.length, 40); }
-function pushNews(s, txt) { s.news.unshift(txt); s.news.length = Math.min(s.news.length, 12); }
+const MANSET = ["SON DAKİKA", "ŞOK", "FLAŞ", "BOMBA İDDİA", "SKANDAL"];
+function pushNews(s, txt) { txt = `${pick(MANSET)}: ${txt}`; s.news.unshift(txt); s.news.length = Math.min(s.news.length, 12); }
 
 // ---------- Kart üretimi ----------
 function qOk(s, q, proj) {
@@ -134,6 +162,7 @@ function qOk(s, q, proj) {
 
 function pickVariant(s, ph, proj) {
   const all = POOL[ph].filter((e) => qOk(s, e.tpl.q, proj));
+  if (!all.length) return null;
   const recent = new Set(s.recent);
   let c = all.filter((e) => !s.used[e.id] && !recent.has(`${e.ph}-${e.idx}`));
   if (!c.length) c = all.filter((e) => !s.used[e.id]);
@@ -155,8 +184,11 @@ function tplCard(s, ph, proj) {
   const e = pickVariant(s, ph, proj);
   if (!e) return null;
   const t = e.tpl;
+  const semt = proj ? proj.semt : SEMTLER[hashStr(e.id) % SEMTLER.length];
   return {
     kind: "tpl", phase: ph, id: e.id, key: `${e.ph}-${e.idx}`, projId: proj ? proj.id : null,
+    speaker: speakerFor(t, e.names, semt, hashStr(e.id + s.t), ph),
+    scale: ph === "hayat" ? lifeScale(s) : undefined,
     title: fill(t.t, e.names, proj, s), text: fill(t.x, e.names, proj, s), twist: e.twist.t, twistM: e.twist.m, ders: t.d,
     choices: t.c.map(([label, fx, result]) => ({ label: fill(label, e.names, proj, s), fx, result: fill(result, e.names, proj, s) })),
   };
@@ -197,6 +229,18 @@ export function drawCard(s) {
     return tplCard(s, "kacis", pick(act));
   }
   if ((s.n < -10 * ms || (act.length > 1 && s.flags.cark)) && rnd() < 0.4) return tplCard(s, "cark", pick(act));
+  // Hikâye zincirleri
+  if (s.t - (s.arcsLast || 0) >= 3 && rnd() < 0.3) {
+    const ready = ARCS.filter((a) => {
+      const st = (s.arcs || {})[a.id] || 0;
+      return st < a.steps.length && s.t - ((s.arcT || {})[a.id] ?? -99) >= 5 && a.steps[st].when(s);
+    });
+    if (ready.length) {
+      const a = pick(ready), st = (s.arcs || {})[a.id] || 0;
+      return { ...a.steps[st].card(s), arc: a.id, arcStep: st, scale: lifeScale(s) };
+    }
+  }
+  if (Object.keys(s.owned || {}).length && rnd() < 0.12) { const c = tplCard(s, "hayat", pick(act)); if (c) return c; }
   if (rnd() < 0.16) return tplCard(s, "genel", pick(act));
   // en uzun süredir ilgilenilmeyen projeye öncelik
   const proj = act.slice().sort((a, b) => a.lastTurn - b.lastTurn)[0];
@@ -260,21 +304,54 @@ function presale(s, p, pct, out) {
 export function resolve(s, card, idx) {
   const ch = card.choices[idx];
   const proj = card.projId != null ? s.projects.find((p) => p.id === card.projId) : null;
-  const scale = proj ? proj.scale : maxScale(s);
+  const scale = card.scale ?? (proj ? proj.scale : maxScale(s));
   const deltas = [];
   const events = [];
-  let newProj = null;
+  let newProj = null, result = ch.result, gamble = null;
+  s.owned = s.owned || {}; s.sins = s.sins || []; s.arcs = s.arcs || {}; s.arcT = s.arcT || {}; s.goals = s.goals || {};
 
   if (card.kind === "tpl") { s.used[card.id] = true; s.recent.push(card.key); if (s.recent.length > 30) s.recent.shift(); }
-  if (ch.act?.type === "newProject") newProj = createProject(s, ch.act.tier, ch.act.semt, ch.act.ad);
-  if (ch.act?.type === "cancel") return { result: ch.result, deltas, events, ders: card.ders, noTime: true };
-  if (ch.act?.type === "quakeFx") applyFx(s, ch.fx, null, null, maxScale(s), deltas);
+  const act = ch.act || {};
+  if (act.type === "newProject") newProj = createProject(s, act.tier, act.semt, act.ad);
+  if (act.type === "cancel") return { result: ch.result, deltas, events, ders: card.ders, noTime: true };
+  if (act.type === "quakeFx") applyFx(s, ch.fx, null, null, maxScale(s), deltas);
   else applyFx(s, ch.fx, proj, card.twistM, scale, deltas);
   if (card.onResolve) card.onResolve(s, idx, events);
 
+  if (act.type === "buy") {
+    const it = LUX[act.key];
+    if (it && !s.owned[act.key]) {
+      s.n -= it.fiyat; deltas.push(["n", -it.fiyat]);
+      ownLux(s, act.key, deltas);
+    }
+  }
+  if (act.type === "gamble") {
+    const win = rnd() < act.p;
+    applyFx(s, win ? act.win : act.lose, proj, null, scale, deltas);
+    result = win ? act.winText : act.loseText;
+    gamble = win;
+  }
+  if (act.type === "esc") escStep(s, act, events, deltas);
+  if (act.type === "redeem") { if (s.olu > 0) s.pendingEnding = "itiraf"; else s.finalEnding = "patron"; }
+  if (act.type === "legacy") { s.legacy = act.key; s.pendingEnding = act.key === "siyaset" && s.finalEnding !== "patron" ? "siyaset" : s.finalEnding; }
+
+  // Kaçış kararı: doğrudan son değil, kaçış operasyonu başlar
+  if (s.pendingEnding === "kacak" && !s.escape) { s.pendingEnding = null; startEscape(s, events); }
+
+  // Hikâye zinciri ilerler
+  if (card.arc) { s.arcs[card.arc] = (card.arcStep || 0) + 1; s.arcT[card.arc] = s.t; s.arcsLast = s.t; }
+  // Son perde: hesap gününden sağ çıktıysan miras kararı gelir
+  if (card.finalStage === "hesap" && !s.pendingEnding && !s.escape) s.queue.unshift(mirasCard(s));
+
+  // Saatli bomba: kirli kararlar dosyaya girer, yıllar sonra patlayabilir
+  const dv = deltas.filter((d) => d[0] === "v").reduce((a, d) => a + d[1], 0);
+  if (dv <= -8 && card.phase !== "hesap" && rnd() < (s.owned.tv ? 0.35 : 0.5)) {
+    s.sins.push({ title: card.title, proj: proj ? proj.name : null, due: s.t + 8 + Math.floor(rnd() * 26) });
+    events.push(["sin", card.title]);
+  }
+
   // Faz ilerlemesi: kart, projenin o anki fazına aitse proje bir adım ilerler.
   if (proj && card.phase === proj.phase && !proj.done) stepProject(s, proj, events);
-  if (proj && card.phase === "satis" && proj.phase === "teslim") { /* teslim kartı kuyrukta */ }
   if (card.phase === "teslim" && proj && !proj.done) finalizeProject(s, proj, events);
 
   // Kartın ait olmadığı fazdaki proje de ilgilenildi sayılır (çark/genel)
@@ -285,16 +362,113 @@ export function resolve(s, card, idx) {
 
   if (!card.noStep) monthly(s, proj, events);
   if (newProj) events.push(["info", `${newProj.name} (${newProj.semt}) portföye eklendi.`]);
-  s.ending = checkEnding(s);
-  return { result: ch.result, deltas, events, ders: card.ders };
+  checkGoals(s, events);
+  let end = checkEnding(s);
+  if (end && ["patron", "baron", "emekli"].includes(end) && !s.finalStarted) {
+    s.finalStarted = true; s.finalEnding = end; end = null;
+    const needHesap = s.sins.length >= 2 || s.m >= 30 || s.vergi > 20;
+    s.queue.unshift(needHesap ? hesapCard(s) : mirasCard(s));
+    events.push(["info", "Kariyerinin son perdesi açılıyor…"]);
+  }
+  s.ending = end;
+  return { result, deltas, events, ders: card.ders, gamble };
 }
+
+// ---------- Lüks ve yan işler ----------
+function ownLux(s, key, deltas) {
+  const it = LUX[key];
+  s.owned[key] = true; s.flags[key] = true;
+  applyFx(s, it.fx, null, null, 1, deltas);
+  pushLog(s, `${it.ikon} ${it.ad} alındı.`);
+  const hab = {
+    mercedes: "Müteahhit yeni Mercedes'iyle şantiyede görüntülendi, ustalar hâlâ hakediş bekliyor",
+    villa: "Müteahhidin havuzlu villası mahallede konuşuluyor",
+    yat: "Bodrum'da yeni bir yat: sahibi müteahhit çıktı",
+    helikopter: "Şantiyeye helikopterle inen müteahhit sosyal medyada gündem oldu",
+    galeri: "İnşaatçıdan oto galeri hamlesi", tv: "Yerel TV kanalı bir müteahhide satıldı",
+    otel: "Bodrum'daki butik otelin yeni sahibi müteahhit", kulup: "Amatör kulübe müteahhit başkan",
+  }[key];
+  if (hab) pushNews(s, hab);
+}
+
+export function canBuy(s, key) {
+  const it = LUX[key];
+  return !!it && !(s.owned || {})[key] && s.completed >= it.min && s.n >= it.fiyat && !s.ending;
+}
+export function buyLux(s, key) {
+  if (!canBuy(s, key)) return null;
+  s.owned = s.owned || {};
+  const deltas = [];
+  s.n -= LUX[key].fiyat; deltas.push(["n", -LUX[key].fiyat]);
+  ownLux(s, key, deltas);
+  const events = [];
+  checkGoals(s, events);
+  return { deltas, events };
+}
+export function sellLux(s, key) {
+  if (!(s.owned || {})[key] || s.ending) return null;
+  const v = LUX[key].fiyat * 0.5;
+  s.n += v; delete s.owned[key]; delete s.flags[key];
+  pushLog(s, `${LUX[key].ikon} ${LUX[key].ad} yarı fiyatına satıldı.`);
+  if (["mercedes", "villa", "yat", "helikopter"].includes(key)) pushNews(s, `Müteahhit ${LUX[key].ad.toLowerCase()} elden çıkardı: işler kötü mü gidiyor?`);
+  return v;
+}
+export function luxMonthly(s) {
+  let net = 0;
+  for (const k of Object.keys(s.owned || {})) { const it = LUX[k]; if (!it) continue; net += (it.gelir || 0) * (0.8 + 0.2 * s.market) - (it.gider || 0); }
+  return net;
+}
+
+// ---------- Kaçış operasyonu ----------
+function startEscape(s, events) {
+  const heat = s.r * 0.4 + (s.olu > 0 ? 25 : 0) + (s.m > 150 ? 8 : 0) - (s.owned && s.owned.tv ? 8 : 0) + 5;
+  s.escape = { heat: clamp(heat, 5, 95), stage: 0, money: Math.max(0, s.n), dest: null };
+  s.queue.unshift(escapeCard(s, 0));
+  events.push(["info", "✈️ Kaçış operasyonu başladı. Her adım seni ya kurtaracak ya yakalatacak."]);
+}
+
+function escStep(s, act, events, deltas) {
+  const es = s.escape;
+  if (!es) return;
+  const ms = maxScale(s);
+  if (act.cash) { const c = act.cash * ms; es.money += c; s.n += c; deltas.push(["n", c]); }
+  if (act.m) { const add = Math.round(act.m * Math.sqrt(ms)); s.m += add; deltas.push(["m", add]); }
+  if (act.keep) es.money *= act.keep;
+  if (act.risk && rnd() < act.risk.p) { es.money *= act.risk.keep; events.push(["info", "🎲 Kripto borsası 'bakım' moduna geçti. Paranın bir kısmı buharlaştı."]); }
+  if (act.dest) es.dest = act.dest;
+  es.heat = clamp(es.heat + (act.heat || 0), 3, 95);
+  if (act.end) {
+    let heat = es.heat;
+    if (act.bribe) heat += rnd() < 0.5 ? -20 : 20;
+    const caught = rnd() < clamp(heat / 100, 0.05, 0.92);
+    s.kacirilan = es.money;
+    s.pendingEnding = caught ? "iade" : "kacak";
+    events.push(["info", caught ? "🚨 Sistemde kırmızı bülten kaydın çıktı!" : "🛫 Tekerlekler yerden kesildi."]);
+  } else {
+    es.stage++;
+    s.queue.unshift(escapeCard(s, es.stage));
+  }
+}
+
+// ---------- Hedefler ----------
+function checkGoals(s, events) {
+  s.goals = s.goals || {};
+  for (const g of GOALS) {
+    if (s.goals[g.id] || !g.test(s)) continue;
+    s.goals[g.id] = s.t;
+    const d = [];
+    if (g.odul) applyFx(s, g.odul, null, null, 1, d);
+    events.push(["goal", g.ad]);
+  }
+}
+export const nextGoal = (s) => GOALS.find((g) => !(s.goals || {})[g.id]) || null;
 
 function stepProject(s, p, events) {
   p.step++;
   if (p.phase === "arsa" && p.step >= STEPS.arsa) toPhase(s, p, "yatirim", events);
   else if (p.phase === "yatirim" && p.step >= STEPS.yatirim) toPhase(s, p, "insaat", events);
   else if (p.phase === "insaat") {
-    const cost = costPerStep(p) * (s.flags.kurKalite ? 1.0 : 1) * (0.9 + s.market * 0.1);
+    const cost = costPerStep(p, s) * (s.flags.kurKalite ? 1.0 : 1) * (0.9 + s.market * 0.1);
     s.n -= cost;
     events.push(["maliyet", -cost]);
     p.progress = clamp(p.progress + 100 / STEPS.insaat, 0, 100);
@@ -359,6 +533,13 @@ function monthly(s, touched, events) {
   for (const p of activeProjects(s)) {
     if (p === touched) continue;
     if (p.phase === "insaat" && rnd() < 0.3) { p.gecikme += 1; p.sahip = clamp(p.sahip - 1, 0, 100); }
+  }
+  const lux = luxMonthly(s);
+  if (lux) { s.n += lux; if (Math.abs(lux) >= 0.05) events.push(["lux", lux]); }
+  // Dolaptaki iskeletler: vadesi gelen dosyalar patlar
+  if (s.sins && s.sins.length) {
+    const due = s.sins.filter((x) => x.due <= s.t);
+    if (due.length) { const x = due[0]; s.sins = s.sins.filter((y) => y !== x); s.queue.push(ghostCard(s, x, hashStr(x.title + s.t))); }
   }
   s.market = clamp(s.market * (1 + (rnd() - 0.47) * 0.03), 0.5, 3);
   s.r = Math.max(0, s.r - 0.7);
@@ -525,19 +706,16 @@ export const ENDINGS = {
 
 export function checkEnding(s) {
   if (s.pendingEnding) {
-    let e = s.pendingEnding;
+    const e = s.pendingEnding;
     s.pendingEnding = null;
-    if (e === "kacak") {
-      const chance = Math.min(0.75, s.r / 180 + (s.olu > 0 ? 0.35 : 0) + (s.m > 150 ? 0.15 : 0));
-      e = rnd() < chance ? "iade" : "kacak";
-      s.kacirilan = Math.max(0, s.n);
-    }
     return e;
   }
+  if (s.escape) return null;
   if (s.r >= 100) return s.olu > 0 ? "deprem" : "hapis";
   if (netWorth(s) < -40 * maxScale(s)) return "iflas";
   if (s.i <= 0 && netWorth(s) < 150) return "kovuldun";
   if (s.g <= 0 && netWorth(s) < 150) return "yatirimci";
+  if (s.finalStarted) return null;
   if (netWorth(s) >= 600 && s.completed >= 5) return s.m > 30 || s.vergi > 25 || s.v < 30 ? "baron" : "patron";
   if (yearOf(s.t) >= END_YEAR) return "emekli";
   return null;

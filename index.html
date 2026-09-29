@@ -32,18 +32,23 @@
         <div><small>Net servet</small><b id="net"></b></div>
         <div><small>Piyasa</small><b id="piyasa"></b></div>
         <div><small>Mağdur</small><b id="magdur"></b></div>
+        <div title="Dolaptaki iskeletler: yıllar sonra patlayabilecek dosyaların"><small>Dosya</small><b id="dosya"></b></div>
       </div>
+      <button id="muteBtn" class="ghost" title="Ses">🔊</button>
       <button id="menuBtn" class="ghost" title="Menü">☰</button>
     </header>
     <div class="stats" id="stats"></div>
     <div class="ticker"><div id="tickerText"></div></div>
 
     <aside id="side">
+      <div id="goal" class="goal"></div>
       <div class="side-tabs">
         <button data-tab="projeler" class="active">Projeler</button>
+        <button data-tab="hayat">Hayatım</button>
         <button data-tab="gunluk">Günlük</button>
       </div>
       <div id="projeler" class="tab"></div>
+      <div id="hayat" class="tab hidden"></div>
       <div id="gunluk" class="tab hidden"></div>
       <div class="side-actions">
         <button id="yeniProjeBtn">🏗️ Yeni Proje</button>
@@ -52,17 +57,33 @@
     </aside>
     <button id="sideToggle" class="ghost">🏢</button>
 
+    <div id="ahlak" class="ahlak" title="Genel gösterge: ahlaklı mı, dolandırıcı mı?">
+      <small>AHLAKLI</small>
+      <div class="ahlak-bar"><i id="ahlakPin"></i></div>
+      <small>DOLANDIRICI</small>
+      <b id="ahlakLbl"></b>
+    </div>
+
+    <div id="toasts"></div>
+
     <section id="card" class="card">
+      <div id="cardBanner" class="banner hidden"></div>
       <div class="card-head"><span id="cardPhase" class="tag"></span><span id="cardProj" class="proj"></span></div>
       <h2 id="cardTitle"></h2>
+      <div id="speaker" class="speaker hidden">
+        <div class="avatar" id="spEmoji"></div>
+        <div class="bubble"><div class="sp-name"><b id="spName"></b> <span id="spMeta"></span></div><div id="spQuote"></div></div>
+      </div>
       <p id="cardText"></p>
       <p id="cardTwist" class="twist"></p>
       <div id="choices" class="choices"></div>
       <div id="resultBox" class="hidden">
+        <div id="reaction" class="speaker reaction hidden"><div class="avatar" id="rxEmoji"></div><div class="bubble" id="rxQuote"></div></div>
         <p id="resultText" class="result"></p>
         <div id="deltas" class="deltas"></div>
         <ul id="events" class="events"></ul>
         <div id="ders" class="ders"></div>
+        <div id="teaser" class="teaser hidden"></div>
         <button id="devamBtn" class="primary">Devam ▸</button>
       </div>
     </section>
@@ -73,6 +94,7 @@
     <div class="start-box">
       <h1>THE MÜTEAHHİT</h1>
       <p class="sub">Arsa sahibini ikna et. Vekaleti al. Yatırımcıyı bul. Betonu dök. Tapuda düşük göster. Çark dönmezse… kaç.<br><b>Ya da dürüst kal.</b> Seçim senin.</p>
+      <div class="firma-row"><label for="firmaInput">Firmanın adı</label><input id="firmaInput" maxlength="28" placeholder="Güven Yapı"></div>
       <div class="start-btns">
         <button id="yeniBtn" class="primary big">Yeni Kariyer</button>
         <button id="devamKariyerBtn" class="hidden">Kaldığın Yerden Devam</button>
@@ -80,7 +102,7 @@
         <button data-open="rehber">Farkındalık Rehberi</button>
         <button data-open="sonlar">Sonlar Koleksiyonu</button>
       </div>
-      <p class="count"><b id="scCount"></b> senaryo · 12 farklı son · 2012–2036</p>
+      <p class="count"><b id="scCount"></b> senaryo · 12 farklı son · kaçış operasyonu · 9 farklı şive · 2012–2036</p>
       <p class="disclaimer">Bu oyun bir <b>farkındalık</b> projesidir. Karakterler ve olaylar kurgusaldır; senaryolar kamuya açık haberlerde ve hukuk kaynaklarında anlatılan yöntemlerden esinlenmiştir. Oyunda kötü seçimler de kazanabilir; çünkü gerçek hayatta da bazen kazanıyor. Amaç bu yöntemleri tanımak ve korunmaktır.</p>
     </div>
   </div>
