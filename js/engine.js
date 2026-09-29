@@ -9,15 +9,17 @@ import HAYAT from './data/hayat.js';
 import { INSAAT_EK, YATIRIM_EK, ARSA_EK, SATIS_EK, CARK_EK } from './data/ek.js';
 import { NAMES, SEMTLER, PROJE_ADLARI, TWISTS } from './data/names.js';
 import { LUX } from './data/lux.js';
-import { speakerFor } from './data/dialect.js';
-import { ARCS, ghostCard, escapeCard, hesapCard, mirasCard, GOALS, LEGACY, DEST } from './data/hikaye.js';
+import { speakerFor, sp as spk, dialectFor } from './data/dialect.js';
+import { YENI_ARSA, YENI_YATIRIM, YENI_INSAAT, YENI_SATIS, YENI_TESLIM, YENI_GENEL, YENI_ARCS, REGION, kurSokuCard } from './data/yeni.js';
+import { ARCS as ESKI_ARCS, ghostCard, escapeCard, hesapCard, mirasCard, GOALS, LEGACY, DEST } from './data/hikaye.js';
 import * as SOS from './sosyal.js';
 import { betonCard, denetimCard, pazarlikCard, tapuCard as tapuMiniCard } from './data/mini.js';
-export { LUX, GOALS, LEGACY, DEST, ARCS };
+const ARCS = [...ESKI_ARCS, ...YENI_ARCS];
+export { LUX, GOALS, LEGACY, DEST, ARCS, REGION };
 
 export const TEMPLATES = {
-  arsa: [...ARSA, ...ARSA_EK], yatirim: [...YATIRIM, ...YATIRIM_EK], insaat: [...INSAAT, ...INSAAT_EK], satis: [...SATIS, ...SATIS_EK],
-  teslim: TESLIM, cark: [...CARK, ...CARK_EK], kacis: KACIS, genel: GENEL, hayat: HAYAT,
+  arsa: [...ARSA, ...ARSA_EK, ...YENI_ARSA], yatirim: [...YATIRIM, ...YATIRIM_EK, ...YENI_YATIRIM], insaat: [...INSAAT, ...INSAAT_EK, ...YENI_INSAAT],
+  satis: [...SATIS, ...SATIS_EK, ...YENI_SATIS], teslim: [...TESLIM, ...YENI_TESLIM], cark: [...CARK, ...CARK_EK], kacis: KACIS, genel: [...GENEL, ...YENI_GENEL], hayat: HAYAT,
 };
 export const VARIANTS = 5;
 export const PHASE_LABEL = { arsa: "Arsa Sahipleri", yatirim: "Yatırımcı", insaat: "İnşaat", satis: "Satış", teslim: "Teslim", cark: "Çark", kacis: "Kaçış", genel: "Gündem", sistem: "Karar", bitti: "Teslim Edildi", hayat: "Hayatın", hikaye: "Hikâye", hesap: "Hesap", sosyal: "Sosyal Medya" };
@@ -156,6 +158,9 @@ function pushNews(s, txt) { txt = `${pick(MANSET)}: ${txt}`; s.news.unshift(txt)
 // ---------- Kart üretimi ----------
 function qOk(s, q, proj) {
   if (!q) return true;
+  if (q.includes("&")) return q.split("&").every((x) => qOk(s, x.trim(), proj));
+  if (q.startsWith("R:")) return !!(proj && REGION[proj.semt] === q.slice(2));
+  if (q.startsWith("Y:")) { const [a, b] = q.slice(2).split("-").map(Number); const y = yearOf(s.t); return y >= a && y <= (b || a); }
   if (q.startsWith("F:")) return !!s.flags[q.slice(2)];
   if (q.startsWith("P:")) return !!(proj && proj.flags[q.slice(2)]);
   if (q === "onsatis") return !!(proj && proj.onSatis > 0);
@@ -190,7 +195,7 @@ function tplCard(s, ph, proj) {
   const semt = proj ? proj.semt : SEMTLER[hashStr(e.id) % SEMTLER.length];
   return {
     kind: "tpl", phase: ph, id: e.id, key: `${e.ph}-${e.idx}`, projId: proj ? proj.id : null,
-    speaker: speakerFor(t, e.names, semt, hashStr(e.id + s.t), ph),
+    speaker: t.sp ? spk(t.sp[0], t.sp[4] || dialectFor(t.sp[0], semt), t.sp[1], t.sp[2], t.sp[3]) : speakerFor(t, e.names, semt, hashStr(e.id + s.t), ph),
     scale: ph === "hayat" ? lifeScale(s) : undefined,
     title: fill(t.t, e.names, proj, s), text: fill(t.x, e.names, proj, s), twist: e.twist.t, twistM: e.twist.m, ders: t.d,
     choices: t.c.map(([label, fx, result]) => ({ label: fill(label, e.names, proj, s), fx, result: fill(result, e.names, proj, s) })),
@@ -355,6 +360,8 @@ export function resolve(s, card, idx, opts = {}) {
     result = tier[2];
   }
   if (opts.extraFx) applyFx(s, opts.extraFx, proj, null, scale, deltas);
+  if (/F:dovizBorcu?\b/.test(ch.fx || "")) s.dovizBorc = (s.dovizBorc || 0) + deltas.filter((d) => d[0] === "b" || d[0] === "y").reduce((a, d) => a + Math.max(0, d[1]), 0);
+  if (act.type === "dovizKapat") s.dovizBorc = 0;
   if (act.type === "yapilandir") s.faizT = s.t + 48;
   if (act.type === "devret") {
     const p = s.projects.find((x) => x.id === act.id);
@@ -583,6 +590,9 @@ function monthly(s, touched, events) {
   for (const ev of SCRIPTED) {
     if (!s.scriptedDone[ev.id] && s.t >= ev.at) { s.scriptedDone[ev.id] = true; s.queue.push(ev.card(s)); }
   }
+  // Kur şokları: döviz borcu bir gecede büyür (2018 yazı, 2021 sonu ve sonra seyrek)
+  const kurAt = [at(2018, 8), at(2021, 12)];
+  if (kurAt.includes(s.t) || (s.t > at(2022, 6) && rnd() < 1 / 150)) kurSoku(s, events);
   // Rastgele küçük/orta deprem
   if (s.t > 18 && rnd() < 1 / 110) s.queue.push(quakeCard(s, 0.35 + rnd() * 0.3, false));
   // Uyarılar
@@ -593,6 +603,16 @@ function monthly(s, touched, events) {
   if (s.v <= 0 && !s.flags.vicdanUyari) { s.flags.vicdanUyari = true; s.queue.push(mirrorCard()); }
   if (s.e <= 4 && activeProjects(s).some((p) => p.phase === "insaat")) s.queue.push(strikeCard(s));
   SOS.monthly(s, sosFx, events);
+}
+
+const at = (y, m) => (y - START_YEAR) * 12 + (m - 1);
+function kurSoku(s, events) {
+  s.dovizBorc = Math.min(s.dovizBorc || 0, s.b);
+  const artis = s.dovizBorc * 0.45;
+  if (artis > 0) { s.b += artis; s.dovizBorc += artis; events.push(["info", `Kur şoku: döviz borcun ${fmt(artis)} büyüdü.`]); }
+  s.market = clamp(s.market * 0.93, 0.5, 3);
+  // 2018 için ayrı senaryolu kart zaten var; borcu yoksa ikinci kart gelmesin
+  if (artis > 0 || s.t !== at(2018, 8)) s.queue.push(kurSokuCard(s, fmt(artis)));
 }
 
 // ---------- Sosyal medya (Harç) ----------
@@ -611,6 +631,10 @@ function newsFromChoice(s, card, ch, proj) {
   if (/F:kotuBeton/.test(fx)) pushNews(s, `Uzmanlar: düşük dayanımlı beton deprem riskini katlıyor`);
   if (/F:ponzi/.test(fx)) pushNews(s, `'Yüksek getiri' vaadiyle para toplayan inşaat firmalarına dikkat`);
   if (/F:kooperatif/.test(fx)) pushNews(s, `Arsası olmayan kooperatife aidat ödeyen yüzlerce aile mağdur`);
+  if (/F:sahteIskan/.test(fx)) pushNews(s, `${sm}'da sahte iskânla teslim edilen binada abonelikler iptal edildi`);
+  if (/F:sahteKampanya/.test(fx)) pushNews(s, `'Bugüne özel %40 indirim' ilanıyla kapora toplayan firmaya şikayet yağıyor`);
+  if (/F:kazaOrtbas/.test(fx)) pushNews(s, `${sm}'daki şantiyede işçinin ölümü 'kaza değil' iddiası`);
+  if (/F:ihaleFesat|F:ihFesat/.test(fx)) pushNews(s, `Kamu konut ihalelerinde şartname iddiası: 'Tek firmaya göre yazıldı'`);
   if (/F:cark/.test(fx)) pushNews(s, `${sm}'da yarım kalan inşaatın arsa sahipleri eylemde`);
 }
 

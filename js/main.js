@@ -71,7 +71,7 @@ function startGame(resume) {
   const saved = resume ? E.load() : null;
   if (saved && !saved.ending) {
     state = saved;
-    Object.assign(state, { owned: state.owned || {}, sins: state.sins || [], arcs: state.arcs || {}, arcT: state.arcT || {}, goals: state.goals || {}, firma: state.firma || 'Güven Yapı' });
+    Object.assign(state, { owned: state.owned || {}, sins: state.sins || [], arcs: state.arcs || {}, arcT: state.arcT || {}, goals: state.goals || {}, dovizBorc: state.dovizBorc || 0, firma: state.firma || 'Güven Yapı' });
     state.queue = (state.queue || []).map((c) => (c.quake ? E.quakeCard(state, c.quake, c.big) : c));
     card = E.drawCard(state);
   } else {
