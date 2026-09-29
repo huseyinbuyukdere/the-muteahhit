@@ -198,6 +198,8 @@ function buildWorld() {
     }
     if (Math.random() < 0.6) tree(x + rand(-6, 6), z + (Math.random() < 0.5 ? -6 : 6));
   }
+  streetLamps();
+  if (HEAD_MAT) cityMat.push(HEAD_MAT);
   for (let i = 0; i < 40; i++) {
     const a = Math.random() * Math.PI * 2, r = rand(100, 170);
     if (Math.sin(a) * r > SEA_Z - 10) continue;
@@ -206,11 +208,28 @@ function buildWorld() {
   }
 }
 
+let HEAD_MAT = null, LAMP_MAT = null;
 function carMesh(color) {
   const g = new THREE.Group();
   const body = box(1.1, 0.45, 2.1, mat(color, { roughness: 0.4, metalness: 0.3 })); body.position.y = 0.4; g.add(body);
   const cab = box(0.95, 0.4, 1.1, mat('#223', { roughness: 0.2 })); cab.position.set(0, 0.8, -0.1); g.add(cab);
+  // Farlar: gece yanar
+  if (!HEAD_MAT) HEAD_MAT = new THREE.MeshStandardMaterial({ color: '#fffbe8', emissive: '#ffe9a8', emissiveIntensity: 0 });
+  for (const x of [-0.35, 0.35]) { const h = new THREE.Mesh(HEAD_GEO, HEAD_MAT); h.position.set(x, 0.45, 1.06); g.add(h); }
   return g;
+}
+const HEAD_GEO = new THREE.BoxGeometry(0.22, 0.12, 0.04);
+
+function streetLamps() {
+  LAMP_MAT = new THREE.MeshStandardMaterial({ color: '#fff6d8', emissive: '#ffd98a', emissiveIntensity: 0 });
+  const pole = mat('#4a4f57'), pg = new THREE.CylinderGeometry(0.07, 0.09, 3.2, 6), lg = new THREE.SphereGeometry(0.28, 8, 6);
+  for (let c = -1; c <= GRID.cols; c++) for (let r = -1; r <= GRID.rows; r++) {
+    const x = cx(c) + GRID.gap / 2 - 1.9, z = cz(r) + GRID.gap / 2 - 1.9;
+    if (z > BEACH_Z - 4) continue;
+    const p = new THREE.Mesh(pg, pole); p.position.set(x, 1.6, z); scene.add(p);
+    const l = new THREE.Mesh(lg, LAMP_MAT); l.position.set(x, 3.25, z); scene.add(l);
+  }
+  cityMat.push(LAMP_MAT);
 }
 
 function tree(x, z, parent = scene) {
