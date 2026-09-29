@@ -5,6 +5,7 @@ import { REHBER, KAYNAKLAR } from './data/rehber.js';
 import { reactionFor } from './data/dialect.js';
 import { FIRMA_ADLARI } from './data/lux.js';
 import * as SFX from './sfx.js';
+import * as PHONE from './phone.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -56,6 +57,7 @@ function boot() {
     for (const t of ['projeler', 'hayat', 'gunluk']) $(t).classList.toggle('hidden', b.dataset.tab !== t);
   }));
   document.addEventListener('keydown', onKey);
+  PHONE.init({ state: () => state, afterChange, toast, floatMoney, deltaChips, eventLine, sfx: (n) => SFX.play(n) });
 }
 
 function startGame(resume) {
@@ -115,6 +117,7 @@ function render() {
     return `<div class="stat" id="st-${k}"><div class="lbl"><span>${l}</span><b>${v}</b></div><div class="bar"><i style="width:${v}%;background:${col}"></i></div></div>`;
   }).join('');
   renderProjects();
+  PHONE.badge();
   $('gunluk').innerHTML = s.log.map((l) => `<div class="log-line">${esc(l)}</div>`).join('') || '<p class="log-line">Henüz bir şey olmadı.</p>';
   const news = [...s.news, ...FACTS];
   const tt = news.map((n) => `● ${n}`).join('     ');
@@ -327,6 +330,8 @@ function eventLine(e) {
   if (t === 'olu') return `<li class="olu">🕯️ ${esc(v)}</li>`;
   if (t === 'sin') return `<li class="sin">⏳ Bu iş dosyaya girdi. Bir gün önüne gelecek…</li>`;
   if (t === 'goal') return `<li class="goal-li">🎯 Hedef tamamlandı: ${esc(v)}</li>`;
+  if (t === 'linc') return `<li class="sin">📱 ${esc(v)}</li>`;
+  if (t === 'viral') return `<li class="goal-li">📱 ${esc(v)}</li>`;
   if (t === 'lux') return `<li>${v >= 0 ? '💼 Yan işlerden gelir' : '💸 Lüks giderleri'}: ${E.fmt(v)}</li>`;
   return `<li>📌 ${esc(v)}</li>`;
 }
@@ -352,6 +357,8 @@ function askFlee() {
 }
 
 function onKey(e) {
+  if (e.key === 'Escape' && PHONE.isOpen()) return PHONE.close();
+  if (PHONE.isOpen()) return;
   if (!$('modal').classList.contains('hidden') || !$('start').classList.contains('hidden') || !state) return;
   if (mode === 'choose' && /^[1-9]$/.test(e.key)) { const i = +e.key - 1; if (card && i < card.choices.length) choose(i); }
   else if (mode === 'result' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); next(); }

@@ -41,6 +41,7 @@ export function play(name) {
   try {
     if (name === 'coin') { tone(988, 0.08, { type: 'square', vol: 0.05 }); tone(1319, 0.25, { type: 'square', vol: 0.05, delay: 0.07 }); }
     else if (name === 'bad') { tone(220, 0.3, { type: 'sawtooth', vol: 0.05, slide: -90 }); }
+    else if (name === 'ping') { tone(1175, 0.06, { type: 'sine', vol: 0.06 }); tone(1568, 0.12, { type: 'sine', vol: 0.06, delay: 0.08 }); }
     else if (name === 'click') { tone(660, 0.04, { type: 'triangle', vol: 0.04 }); }
     else if (name === 'rumble') { noise(2.4, 0.5, 120); }
     else if (name === 'win') { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.22, { type: 'triangle', vol: 0.07, delay: i * 0.11 })); }

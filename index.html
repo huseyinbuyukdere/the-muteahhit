@@ -34,6 +34,7 @@
         <div><small>Mağdur</small><b id="magdur"></b></div>
         <div title="Dolaptaki iskeletler: yıllar sonra patlayabilecek dosyaların"><small>Dosya</small><b id="dosya"></b></div>
       </div>
+      <button id="phoneBtn" class="ghost phone-btn" title="Telefon: Harç">📱<span id="phoneBadge" class="badge hidden"></span></button>
       <button id="muteBtn" class="ghost" title="Ses">🔊</button>
       <button id="menuBtn" class="ghost" title="Menü">☰</button>
     </header>
@@ -87,6 +88,16 @@
         <button id="devamBtn" class="primary">Devam ▸</button>
       </div>
     </section>
+  </div>
+
+  <!-- Telefon: kurgusal sosyal medya uygulaması "Harç" -->
+  <div id="phone" class="phone-wrap hidden">
+    <div class="phone">
+      <div class="ph-status"><span id="phClock"></span><span class="notch"></span><span>📶 🔋</span></div>
+      <div class="ph-app"><b>harç</b><small>şehrin duvarı</small><button id="phoneClose" class="ghost" title="Kapat">✕</button></div>
+      <nav class="ph-tabs"><button data-t="akis" class="active">🏠 Akış</button><button data-t="paylas">➕ Paylaş</button><button data-t="profil">👤 Profil</button><button data-t="reklam">📣 Reklam</button></nav>
+      <div id="phBody" class="ph-body"></div>
+    </div>
   </div>
 
   <!-- Başlangıç ekranı -->

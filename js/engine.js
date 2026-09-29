@@ -11,6 +11,7 @@ import { NAMES, SEMTLER, PROJE_ADLARI, TWISTS } from './data/names.js';
 import { LUX } from './data/lux.js';
 import { speakerFor } from './data/dialect.js';
 import { ARCS, ghostCard, escapeCard, hesapCard, mirasCard, GOALS, LEGACY, DEST } from './data/hikaye.js';
+import * as SOS from './sosyal.js';
 export { LUX, GOALS, LEGACY, DEST, ARCS };
 
 export const TEMPLATES = {
@@ -18,7 +19,7 @@ export const TEMPLATES = {
   teslim: TESLIM, cark: [...CARK, ...CARK_EK], kacis: KACIS, genel: GENEL, hayat: HAYAT,
 };
 export const VARIANTS = 5;
-export const PHASE_LABEL = { arsa: "Arsa Sahipleri", yatirim: "Yatırımcı", insaat: "İnşaat", satis: "Satış", teslim: "Teslim", cark: "Çark", kacis: "Kaçış", genel: "Gündem", sistem: "Karar", bitti: "Teslim Edildi", hayat: "Hayatın", hikaye: "Hikâye", hesap: "Hesap" };
+export const PHASE_LABEL = { arsa: "Arsa Sahipleri", yatirim: "Yatırımcı", insaat: "İnşaat", satis: "Satış", teslim: "Teslim", cark: "Çark", kacis: "Kaçış", genel: "Gündem", sistem: "Karar", bitti: "Teslim Edildi", hayat: "Hayatın", hikaye: "Hikâye", hesap: "Hesap", sosyal: "Sosyal Medya" };
 const STEPS = { arsa: 3, yatirim: 2, insaat: 7, satis: 3 };
 export const START_YEAR = 2012;
 export const END_YEAR = 2036;
@@ -97,7 +98,7 @@ export function ahlakEtiket(a) {
   return "Kırmızı Bültenlik";
 }
 export const contractorUnits = (p) => Math.round((p.daire * (100 - p.pay)) / 100);
-export const unitPrice = (s, p) => 7.8 * s.market * (0.7 + p.kalite / 350 + s.i / 350);
+export const unitPrice = (s, p) => 7.8 * s.market * (0.7 + p.kalite / 350 + s.i / 350) * (1 + (s.sosyal ? s.sosyal.hype : 0));
 const costPerStep = (p, s) => (p.daire * 2.0 * (0.55 + p.kalite / 220)) / STEPS.insaat * (s && s.owned && s.owned.beton ? 0.88 : 1);
 
 export function unlockedTiers(s) {
@@ -555,7 +556,14 @@ function monthly(s, touched, events) {
   if (netWorth(s) < -28 * ms && s.t - s.lastWarn > 8) { s.lastWarn = s.t; s.lastKacis = s.t; s.queue.push(tplCard(s, "kacis", pick(activeProjects(s)) || null)); }
   if (s.v <= 0 && !s.flags.vicdanUyari) { s.flags.vicdanUyari = true; s.queue.push(mirrorCard()); }
   if (s.e <= 4 && activeProjects(s).some((p) => p.phase === "insaat")) s.queue.push(strikeCard(s));
+  SOS.monthly(s, sosFx, events);
 }
+
+// ---------- Sosyal medya (Harç) ----------
+const sosFx = (s, fx, proj, out) => applyFx(s, fx, proj, null, maxScale(s), out);
+export const sosyalPost = (s, id) => { const r = SOS.post(s, id, sosFx); if (r) checkGoals(s, r.events); return r; };
+export const sosyalReklam = (s, id) => SOS.reklam(s, id, sosFx);
+export const sosyalTurn = (s, pol) => SOS.botTurn(s, pol, sosFx);
 
 function newsFromChoice(s, card, ch, proj) {
   const fx = ch.fx || "";

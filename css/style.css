@@ -219,3 +219,100 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   #toasts { top: 150px; width: 90%; align-items: center; }
   .money div:nth-child(5) { display: none; }
 }
+
+/* ---------- Telefon: Harç ---------- */
+.phone-btn { position: relative; }
+.badge { position: absolute; top: 0; right: 0; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--red); color: #fff; font-size: 10px; font-weight: 800; line-height: 17px; text-align: center; box-shadow: 0 0 0 2px var(--bg); }
+.badge.dot { min-width: 10px; width: 10px; height: 10px; padding: 0; top: 4px; right: 5px; font-size: 0; animation: pulse 1.6s infinite; }
+@keyframes pulse { 50% { transform: scale(1.35); } }
+.phone-wrap { position: fixed; inset: 0; z-index: 25; display: grid; place-items: center; background: rgba(8, 10, 14, .6); backdrop-filter: blur(3px); }
+.phone { --ph: #f6f7f9; --phl: #e4e7ec; --pht: #15181d; --phm: #6b7380; width: 380px; height: min(760px, 94vh); background: var(--ph); color: var(--pht); border-radius: 42px; border: 10px solid #0b0d11; box-shadow: 0 30px 80px rgba(0,0,0,.6), inset 0 0 0 1px #333; display: flex; flex-direction: column; overflow: hidden; animation: phoneIn .35s cubic-bezier(.2,1.3,.4,1); }
+@keyframes phoneIn { from { transform: translateY(40px) scale(.94); opacity: 0; } }
+.ph-status { display: flex; justify-content: space-between; align-items: center; padding: 8px 22px 2px; font-size: 12px; font-weight: 700; }
+.ph-status .notch { width: 90px; height: 22px; background: #0b0d11; border-radius: 12px; }
+.ph-app { display: flex; align-items: baseline; gap: 8px; padding: 6px 16px 8px; border-bottom: 1px solid var(--phl); }
+.ph-app b { font-family: Anton, sans-serif; font-size: 26px; letter-spacing: .5px; color: #e0592a; }
+.ph-app small { color: var(--phm); font-size: 11px; flex: 1; }
+.ph-app button { color: var(--pht); font-size: 18px; }
+.ph-tabs { display: flex; border-bottom: 1px solid var(--phl); }
+.ph-tabs button { flex: 1; background: none; border: none; border-radius: 0; padding: 9px 2px; font-size: 12px; font-weight: 700; color: var(--phm); border-bottom: 2px solid transparent; }
+.ph-tabs button.active { color: #e0592a; border-bottom-color: #e0592a; }
+.ph-body { flex: 1; overflow-y: auto; padding: 10px; -webkit-overflow-scrolling: touch; }
+.ph-body .primary, .ph-body .danger { padding: 8px 14px; font-size: 13px; }
+.ph-body button:disabled { opacity: .45; cursor: not-allowed; }
+.ph-body .wide { width: 100%; margin: 10px 0 20px; }
+.ph-trends { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+.ph-trends span { flex: none; background: #fff; border: 1px solid var(--phl); border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; color: #2b5fd9; }
+.ph-trends span.hot { background: #e5484d; color: #fff; border-color: #e5484d; animation: pulse 2s infinite; }
+.ph-trends small { font-weight: 400; opacity: .75; }
+.ph-post { background: #fff; border: 1px solid var(--phl); border-radius: 16px; margin-bottom: 10px; overflow: hidden; animation: rise .3s ease; }
+.ph-post header { display: flex; align-items: center; gap: 8px; padding: 9px 10px; }
+.ph-post header div { flex: 1; min-width: 0; font-size: 13px; }
+.ph-post header small { display: block; color: var(--phm); font-size: 11px; }
+.ph-post .av { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#f4c20d,#e0592a); display: grid; place-items: center; font-size: 18px; flex: none; }
+.ph-post .tick { color: #2b5fd9; font-style: normal; font-size: 11px; }
+.ph-post > p { margin: 4px 10px 8px; font-size: 13.5px; line-height: 1.4; }
+.ph-post.news { background: #fff7f7; }
+.ph-post.news .av { background: #7a1c20; }
+.ph-post.viral { box-shadow: 0 0 0 2px #f4a20d; }
+.ph-post.ifsa { box-shadow: 0 0 0 2px #e5484d; }
+.ph-media { position: relative; }
+.ph-photo { height: 190px; display: grid; place-items: center; position: relative; overflow: hidden; }
+.ph-photo span { font-size: 84px; filter: drop-shadow(0 8px 12px rgba(0,0,0,.3)); }
+.ph-photo em { position: absolute; bottom: 8px; left: 10px; font-style: normal; font-weight: 800; font-size: 12px; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.7); letter-spacing: .5px; }
+.stamp { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(-12deg); border: 4px solid #e5484d; color: #e5484d; background: rgba(255,255,255,.88); font-family: Anton, sans-serif; font-size: 19px; padding: 4px 12px; border-radius: 6px; white-space: nowrap; animation: stampIn .4s cubic-bezier(.3,1.6,.5,1); }
+@keyframes stampIn { from { transform: translate(-50%,-50%) rotate(-12deg) scale(2.2); opacity: 0; } }
+.ph-acts { display: flex; gap: 14px; padding: 8px 10px 0; font-size: 12.5px; font-weight: 700; }
+.pill { font-size: 10.5px; font-weight: 800; padding: 3px 7px; border-radius: 999px; white-space: nowrap; }
+.pill.ok { background: #fff1d6; color: #b36b00; }
+.pill.bad { background: #ffe1e2; color: #c02a30; }
+.pill.warn { background: #eef1f5; color: #4a5462; }
+.ph-note { margin: 0 10px 8px; background: #fff8e1; border: 1px solid #f4d06f; border-radius: 10px; padding: 7px 9px; font-size: 12px; line-height: 1.35; }
+.ph-note b { display: block; font-size: 11px; margin-bottom: 2px; }
+.ph-note.bad { background: #ffeef0; border-color: #f3a5a8; }
+.ph-cm { border-top: 1px solid var(--phl); padding: 6px 10px 8px; }
+.ph-cm .c { display: flex; gap: 6px; font-size: 12.5px; line-height: 1.35; padding: 4px 0; }
+.ph-cm .c > span { flex: none; }
+.ph-cm .c b { color: #333; }
+.ph-cm .c small { display: block; color: var(--phm); font-size: 10.5px; }
+.ph-cm .c.magdur b, .ph-cm .c.usta b { color: #c02a30; }
+.ph-cm .c.pinar b { color: #2b5fd9; }
+.ph-cm .c.bot { opacity: .6; }
+.ph-cm .more { background: none; border: none; padding: 4px 0; font-size: 12px; color: var(--phm); }
+.ph-cm .rest { display: none; }
+.ph-cm.open .rest { display: block; }
+.ph-hint { font-size: 12.5px; background: #eef1f5; border-radius: 12px; padding: 9px 11px; margin-bottom: 10px; line-height: 1.4; }
+.ph-hint small { color: var(--phm); }
+.ph-compose { background: #fff; border: 1px solid var(--phl); border-radius: 14px; padding: 10px; margin-bottom: 9px; }
+.ph-compose.lie { border-color: #f3a5a8; background: #fffafa; }
+.ph-compose .top { display: flex; align-items: center; gap: 7px; font-size: 13.5px; }
+.ph-compose .top b { flex: 1; }
+.ph-compose .ic { font-size: 22px; }
+.ph-compose p { font-size: 12.5px; color: #3c4450; margin: 6px 0 8px; line-height: 1.4; font-style: italic; }
+.ph-empty { text-align: center; padding: 30px 10px; color: var(--phm); font-size: 14px; line-height: 2; }
+.ph-prof { text-align: center; }
+.ph-prof .av.big { width: 76px; height: 76px; margin: 6px auto; border-radius: 50%; background: linear-gradient(135deg,#f4c20d,#e0592a); display: grid; place-items: center; font-size: 40px; }
+.ph-prof h3 { margin: 4px 0 0; }
+.ph-prof > small { color: var(--phm); }
+.ph-prof .nums { display: flex; justify-content: space-around; margin: 12px 0; }
+.ph-prof .nums div { display: flex; flex-direction: column; }
+.ph-prof .nums small { color: var(--phm); font-size: 11px; }
+.ph-prof .bio { font-size: 12.5px; }
+.ph-prof .ph-note { text-align: left; margin: 0 0 8px; }
+.ph-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-top: 10px; }
+.ph-grid div { aspect-ratio: 1; display: grid; place-items: center; font-size: 34px; position: relative; border-radius: 4px; }
+.ph-grid i { position: absolute; top: 3px; right: 4px; font-size: 14px; font-style: normal; }
+.ph-body .deltas { margin: 6px 0; }
+.ph-body .chip { background: #eef1f5; color: #333; }
+.ph-body .chip.good { background: #dff3e3; color: #1e7a33; }
+.ph-body .chip.bad { background: #ffe1e2; color: #c02a30; }
+.ph-body .events { list-style: none; padding: 0; margin: 6px 0; font-size: 13px; }
+.ph-body .events li { padding: 3px 0; }
+.ph-body .ders { background: #eaf6ec; border: 1px solid #b8e0bf; color: #1e4d27; border-radius: 10px; padding: 9px; font-size: 12.5px; line-height: 1.45; }
+.ph-body .neg { color: #c02a30; }
+@media (max-width: 860px) {
+  .phone-wrap { background: var(--bg); }
+  .phone { width: 100vw; height: 100dvh; border: none; border-radius: 0; }
+  .ph-status { padding-top: max(8px, env(safe-area-inset-top)); }
+  .ph-status .notch { visibility: hidden; }
+}
