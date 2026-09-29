@@ -12,6 +12,7 @@ import { LUX } from './data/lux.js';
 import { speakerFor } from './data/dialect.js';
 import { ARCS, ghostCard, escapeCard, hesapCard, mirasCard, GOALS, LEGACY, DEST } from './data/hikaye.js';
 import * as SOS from './sosyal.js';
+import { betonCard, denetimCard, pazarlikCard, tapuCard as tapuMiniCard } from './data/mini.js';
 export { LUX, GOALS, LEGACY, DEST, ARCS };
 
 export const TEMPLATES = {
@@ -98,7 +99,8 @@ export function ahlakEtiket(a) {
   return "Kırmızı Bültenlik";
 }
 export const contractorUnits = (p) => Math.round((p.daire * (100 - p.pay)) / 100);
-export const unitPrice = (s, p) => 7.8 * s.market * (0.7 + p.kalite / 350 + s.i / 350) * (1 + (s.sosyal ? s.sosyal.hype : 0));
+// Güvenilir firma primi: temiz sicilli müteahhidin dairesi daha pahalıya satılır
+export const unitPrice = (s, p) => 7.8 * s.market * (0.7 + p.kalite / 350 + s.i / 350) * (1 + (s.sosyal ? s.sosyal.hype : 0) + Math.max(0, ahlak(s) - 60) / 250);
 const costPerStep = (p, s) => (p.daire * 2.0 * (0.55 + p.kalite / 220)) / STEPS.insaat * (s && s.owned && s.owned.beton ? 0.88 : 1);
 
 export function unlockedTiers(s) {
@@ -245,8 +247,22 @@ export function drawCard(s) {
   if (rnd() < 0.16) return tplCard(s, "genel", pick(act));
   // en uzun süredir ilgilenilmeyen projeye öncelik
   const proj = act.slice().sort((a, b) => a.lastTurn - b.lastTurn)[0];
+  const mc = miniFor(s, proj);
+  if (mc) return mc;
   const ph = proj.phase === "teslim" ? "satis" : proj.phase;
   return tplCard(s, ph, proj);
+}
+
+// Her projede bir kez: beton dökümü, habersiz denetim, arsa pazarlığı, tapu günü (mini oyunlu)
+function miniFor(s, p) {
+  const f = p.flags;
+  let c = null;
+  if (p.phase === "arsa" && !f.miniPazarlik && rnd() < 0.5) { f.miniPazarlik = true; c = pazarlikCard(s, p, p.id * 7 + s.t); }
+  else if (p.phase === "insaat" && p.progress >= 15 && !f.miniBeton && rnd() < 0.5) { f.miniBeton = true; c = betonCard(s, p); }
+  else if (p.phase === "insaat" && p.progress >= 45 && !f.miniDenetim && rnd() < 0.4) { f.miniDenetim = true; c = denetimCard(s, p); }
+  else if (p.phase === "satis" && !f.miniTapu && rnd() < 0.4) { f.miniTapu = true; c = tapuMiniCard(s, p); }
+  if (c) c.scale = p.scale;
+  return c;
 }
 
 export function fleeCard(s) {
@@ -302,7 +318,7 @@ function presale(s, p, pct, out) {
 }
 
 // ---------- Kart çözümleme ----------
-export function resolve(s, card, idx) {
+export function resolve(s, card, idx, opts = {}) {
   const ch = card.choices[idx];
   const proj = card.projId != null ? s.projects.find((p) => p.id === card.projId) : null;
   const scale = card.scale ?? (proj ? proj.scale : maxScale(s));
@@ -332,7 +348,25 @@ export function resolve(s, card, idx) {
     result = win ? act.winText : act.loseText;
     gamble = win;
   }
-  if (act.type === "esc") escStep(s, act, events, deltas);
+  if (act.type === "mini") {
+    const sc = opts.score ?? rnd();
+    const tier = act.tiers.find((t) => sc >= t[0]) || act.tiers[act.tiers.length - 1];
+    applyFx(s, tier[1], proj, null, scale, deltas);
+    result = tier[2];
+  }
+  if (opts.extraFx) applyFx(s, opts.extraFx, proj, null, scale, deltas);
+  if (act.type === "yapilandir") s.faizT = s.t + 48;
+  if (act.type === "devret") {
+    const p = s.projects.find((x) => x.id === act.id);
+    if (p && !p.done) {
+      const bedel = (1.5 + p.progress / 25) * p.scale + p.yatirim * 0.8;
+      s.n += bedel; deltas.push(["n", bedel]);
+      p.done = true; p.devir = true; p.phase = "bitti"; p.doneAt = s.t;
+      pushLog(s, `${p.name} devredildi.`);
+      events.push(["info", `${p.name} yeni firmaya devredildi (${fmt(bedel)}).`]);
+    }
+  }
+  if (act.type === "esc") { if (act.mini && s.escape) s.escape.heat = clamp(s.escape.heat + (0.5 - (opts.score ?? rnd())) * 50, 3, 95); escStep(s, act, events, deltas); }
   if (act.type === "redeem") { if (s.olu > 0) s.pendingEnding = "itiraf"; else s.finalEnding = "patron"; }
   if (act.type === "legacy") { s.legacy = act.key; s.pendingEnding = act.key === "siyaset" && s.finalEnding !== "patron" ? "siyaset" : s.finalEnding; }
 
@@ -526,8 +560,8 @@ function finalizeProject(s, p, events) {
 
 function monthly(s, touched, events) {
   s.t++;
-  if (s.b > 0) { const f = s.b * 0.012; s.n -= f; events.push(["faiz", -f]); }
-  if (s.n < 0) { const f = -s.n * 0.015; s.n -= f; }
+  if (s.b > 0) { const f = s.b * (s.faizT > s.t ? 0.004 : 0.012); s.n -= f; events.push(["faiz", -f]); }
+  if (s.n < 0) { const f = -s.n * (s.faizT > s.t ? 0.006 : 0.015); s.n -= f; }
   // Kasada fazla para varsa banka borcunun bir kısmı otomatik kapanır
   const tampon = 4 * maxScale(s);
   if (s.b > 0 && s.n > tampon) { const od = Math.min(s.b, (s.n - tampon) * 0.4); s.n -= od; s.b -= od; }
@@ -554,6 +588,8 @@ function monthly(s, touched, events) {
   // Uyarılar
   const ms = maxScale(s);
   if (netWorth(s) < -28 * ms && s.t - s.lastWarn > 8) { s.lastWarn = s.t; s.lastKacis = s.t; s.queue.push(tplCard(s, "kacis", pick(activeProjects(s)) || null)); }
+  // Temiz sicilli firmaya bankanın uzattığı el (bir kez)
+  if (netWorth(s) < -14 * ms && !s.flags.kurtarma && ahlak(s) >= 55 && s.m < 8) { s.flags.kurtarma = true; s.queue.push(kurtarmaCard(s)); }
   if (s.v <= 0 && !s.flags.vicdanUyari) { s.flags.vicdanUyari = true; s.queue.push(mirrorCard()); }
   if (s.e <= 4 && activeProjects(s).some((p) => p.phase === "insaat")) s.queue.push(strikeCard(s));
   SOS.monthly(s, sosFx, events);
@@ -579,6 +615,21 @@ function newsFromChoice(s, card, ch, proj) {
 }
 
 // ---------- Özel kartlar ----------
+function kurtarmaCard(s) {
+  const geri = activeProjects(s).filter((p) => ["arsa", "yatirim", "insaat"].includes(p.phase)).sort((a, b) => a.progress - b.progress)[0];
+  return {
+    kind: "sys", phase: "sistem", title: "Banka Masası", noStep: true,
+    speaker: { role: "YT", name: "banka şube müdürü Leyla Hanım", dia: "ankara", label: "", roleLabel: "Banka", emoji: "🏦", quote: "Sicilinizi inceledik: mağdurunuz yok, çekleriniz karşılıksız çıkmamış. Size bir yol açabiliriz." },
+    text: "Kasa eriyor, faizler büyüyor. Ama yıllardır sözünü tutmuş bir firmasın. Banka ve sektördeki büyük bir firma masaya iki teklif koydu.",
+    ders: "Temiz ödeme geçmişi, zor günlerde yapılandırma ve konkordato gibi yasal yolları mümkün kılar. Bir proje başka firmaya devredilirken alıcılar ve arsa sahipleri devir sözleşmesini, yeni firmanın yükümlülükleri üstlendiğini ve tapu şerhlerini mutlaka kontrol etmelidir.",
+    choices: [
+      { label: "Kredileri yapılandır: 4 yıl düşük faiz", fx: "i-2", act: { type: "yapilandir" }, result: "İmzalar atıldı. Faiz yükün yarıdan aza indi; nefes aldın." },
+      ...(geri ? [{ label: `${geri.name} projesini büyük firmaya devret`, fx: "i-3 v+2", act: { type: "devret", id: geri.id }, result: "Proje el değiştirdi. Alıcıların hakları devir sözleşmesiyle korundu." }] : []),
+      { label: "Teşekkürler, kendi yolumla çıkarım", fx: "v+1", result: "Masadan kalktın. Umarım haklısındır." },
+    ],
+  };
+}
+
 function mirrorCard() {
   return {
     kind: "sys", phase: "sistem", title: "Aynadaki Yüz",

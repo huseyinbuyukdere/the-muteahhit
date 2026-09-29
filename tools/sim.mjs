@@ -13,12 +13,14 @@ const W = {
   cakal: { n: 3, y: 1.5, o: 0.3, x: 2, v: 0, r: -0.6, i: 0.4, g: 0.5, m: 0 },
   karma: { n: 1.5, i: 1, v: 0.6, r: -0.8, m: -1, g: 0.5, e: 0.3, k: 0.3 },
 };
-function score(pol, ch, s) {
+function score(pol, ch, s, card) {
   if (pol === 'rastgele') return Math.random();
   const f = tok(ch.fx), w = W[pol];
   let sc = Math.random() * 0.5;
-  for (const [k, v] of Object.entries(f)) if (w[k] != null) sc += w[k] * v;
-  if (f['E:itiraf'] || f['E:hapis']) sc -= pol === 'durust' ? 2 : 40;
+  const pj = card && card.projId != null ? s.projects.find((p) => p.id === card.projId) : null;
+  const sca = (card && card.scale) || (pj ? pj.scale : E.maxScale(s));
+  for (const [k, v] of Object.entries(f)) if (w[k] != null) sc += w[k] * v * ('nbxy'.includes(k) ? Math.sqrt(sca) : 1);
+  if (f['E:itiraf'] || f['E:hapis']) sc -= pol === 'durust' && s.r > 60 ? 2 : 90;
   if (f['E:kacak']) sc += pol === 'cakal' && s.r > 60 ? 30 : -40;
   const a = ch.act || {};
   if (a.type === 'gamble') sc += pol === 'cakal' ? 3 : -1;
@@ -28,7 +30,9 @@ function score(pol, ch, s) {
   if (a.type === 'redeem') sc += pol === 'durust' ? 20 : -5;
   if (a.type === 'legacy') sc += Math.random() * 3;
   if (a.type === 'buy') sc += pol === 'cakal' ? 4 : -2;
-  if (/sosyal:/.test(a.type || '')) sc += 0;
+  if (a.type === 'yapilandir') sc += 6;
+  if (a.type === 'devret') sc += 3;
+  if (a.type === 'mini') sc += pol === 'durust' ? 3 : pol === 'karma' ? 1.5 : 0;
   return sc;
 }
 function play(pol) {
@@ -40,8 +44,9 @@ function play(pol) {
     if (pol === 'cakal') for (const k of Object.keys(E.LUX)) if (E.canBuy(s, k) && s.n > E.LUX[k].fiyat * 2) E.buyLux(s, k);
     if (E.sosyalTurn && !process.env.NOSOS) E.sosyalTurn(s, pol);
     let best = 0, bs = -1e9;
-    card.choices.forEach((ch, i) => { const v = score(pol, ch, s); if (v > bs) { bs = v; best = i; } });
-    E.resolve(s, card, best);
+    card.choices.forEach((ch, i) => { const v = score(pol, ch, s, card); if (v > bs) { bs = v; best = i; } });
+    const skill = { durust: 0.35, karma: 0.2, cakal: 0.1, rastgele: 0 }[pol];
+    E.resolve(s, card, best, { score: skill + Math.random() * (1 - skill) });
     if (s.ending) break;
     card = E.drawCard(s);
   }

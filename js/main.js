@@ -6,6 +6,7 @@ import { reactionFor } from './data/dialect.js';
 import { FIRMA_ADLARI } from './data/lux.js';
 import * as SFX from './sfx.js';
 import * as PHONE from './phone.js';
+import * as MINI from './mini.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -57,6 +58,7 @@ function boot() {
     for (const t of ['projeler', 'hayat', 'gunluk']) $(t).classList.toggle('hidden', b.dataset.tab !== t);
   }));
   document.addEventListener('keydown', onKey);
+  MINI.init({ sfx: (n) => SFX.play(n) });
   PHONE.init({ state: () => state, afterChange, toast, floatMoney, deltaChips, eventLine, sfx: (n) => SFX.play(n) });
 }
 
@@ -232,9 +234,11 @@ function showCard(c) {
   $('choices').innerHTML = '';
   c.choices.forEach((ch, i) => {
     const b = document.createElement('button');
-    const risky = ch.act?.type === 'gamble' || (ch.act?.type === 'esc' && (ch.act.end || ch.act.risk));
-    b.innerHTML = `<b>${i + 1}.</b> ${esc(ch.label)}${risky && !/🎲/.test(ch.label) ? ' 🎲' : ''}`;
+    const isMini = ch.act?.type === 'mini' || ch.act?.mini;
+    const risky = !isMini && (ch.act?.type === 'gamble' || (ch.act?.type === 'esc' && (ch.act.end || ch.act.risk)));
+    b.innerHTML = `<b>${i + 1}.</b> ${isMini ? '🎮 ' : ''}${esc(ch.label)}${risky && !/🎲/.test(ch.label) ? ' 🎲' : ''}`;
     if (risky) b.classList.add('risky');
+    if (isMini) b.classList.add('minich');
     b.onclick = () => choose(i);
     $('choices').appendChild(b);
   });
@@ -246,11 +250,23 @@ function showCard(c) {
 
 function choose(i) {
   if (mode !== 'choose') return;
+  const a = card.choices[i].act || {};
+  const game = a.type === 'mini' ? a.game : a.mini;
+  if (game) {
+    mode = 'mini';
+    MINI.run(game, card.miniCtx || {}).then((r) => { mode = 'choose'; doChoose(i, r); });
+    return;
+  }
+  doChoose(i, {});
+}
+
+function doChoose(i, mini) {
+  if (mode !== 'choose') return;
   mode = 'result';
   const c = card;
   const before = Object.fromEntries(STATS.map(([k]) => [k, state[k]]));
   const n0 = state.n;
-  const res = E.resolve(state, c, i);
+  const res = E.resolve(state, c, i, mini);
   if (res.noTime) { render(); showCard(E.drawCard(state)); return; }
   // Konuşan kişinin tepkisi (şivesiyle)
   const mood = res.deltas.reduce((a, [k, v]) => a + (k === 'v' ? v : k === 's' ? v * 0.7 : k === 'e' && c.speaker?.role === 'US' ? v : k === 'm' ? -v * 3 : 0), 0);
@@ -259,7 +275,7 @@ function choose(i) {
   if (rx) { $('rxEmoji').textContent = c.speaker.emoji; $('rxQuote').innerHTML = `<b>${esc(c.speaker.name)}:</b> “${esc(rx)}”`; $('reaction').className = `speaker reaction ${mood >= 0 ? 'good' : 'bad'}`; }
   $('choices').classList.add('hidden');
   $('resultBox').classList.remove('hidden');
-  $('resultText').textContent = (res.gamble === true ? '🎲 TUTTU! ' : res.gamble === false ? '🎲 TUTMADI! ' : '') + res.result;
+  $('resultText').textContent = (mini.score != null ? `🎮 ${Math.round(mini.score * 100)}/100 — ` : '') + (res.gamble === true ? '🎲 TUTTU! ' : res.gamble === false ? '🎲 TUTMADI! ' : '') + res.result;
   $('deltas').innerHTML = deltaChips(res.deltas);
   $('events').innerHTML = res.events.filter((e) => e[0] !== 'faiz').map(eventLine).join('');
   $('ders').innerHTML = c.ders ? `💡 <b>Gerçek hayatta:</b> ${esc(c.ders)}` : '';

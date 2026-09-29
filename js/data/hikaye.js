@@ -1,6 +1,7 @@
 // HİKÂYELER — oyun boyunca geri dönen karakterler, geçmişten patlayan dosyalar, kaçış operasyonu ve son perde.
 // Bütün kartlar düz veri döner (kayda yazılabilsin diye içinde fonksiyon yok).
 import { sp } from './dialect.js';
+import { havalimaniChoice } from './mini.js';
 
 const sys = (o) => ({ kind: "sys", phase: "hikaye", ...o });
 const flag = (s, f) => !!s.flags[f];
@@ -285,6 +286,7 @@ export function escapeCard(s, stage) {
     text: `Kalbin küt küt atıyor. Yanında ${es.money.toFixed(1).replace(".", ",")} M₺. ${h}. Bir adım kaldı.`,
     ders: "Havalimanlarında yurt dışı çıkış yasağı ve arama kayıtları anlık kontrol edilir. Kaçmaya çalışan pek çok müteahhit son anda yakalanmıştır.",
     choices: [
+      ...(yat ? [] : [havalimaniChoice]),
       { label: "Sakin ol, gülümse, bekle 🎲", act: { type: "esc", heat: 0, end: true }, result: "" },
       { label: "Görevliye zarf uzat 🎲", act: { type: "esc", heat: 0, bribe: true, end: true }, result: "" },
       { label: "Son anda vazgeç, savcılığa git", fx: "E:itiraf", result: "Geri döndün. Kelepçeler takıldı; ama kaçak değilsin." },
