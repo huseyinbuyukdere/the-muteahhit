@@ -7,6 +7,8 @@ import { FIRMA_ADLARI } from './data/lux.js';
 import * as SFX from './sfx.js';
 import * as PHONE from './phone.js';
 import * as MINI from './mini.js';
+import * as ISCI from './data/isci.js';
+import { DIALECT_LABEL } from './data/dialect.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -59,6 +61,7 @@ function boot() {
   }));
   document.addEventListener('keydown', onKey);
   MINI.init({ sfx: (n) => SFX.play(n) });
+  if (sceneOk) S3.onPick(showPick);
   PHONE.init({ state: () => state, afterChange, toast, floatMoney, deltaChips, eventLine, sfx: (n) => SFX.play(n) });
 }
 
@@ -184,6 +187,116 @@ function renderHayat() {
   }));
 }
 
+// ---------- 3B sahnede tıklama ----------
+function kesitSvg(p) {
+  const W = 230, H = 150, fl = p.phase === 'insaat' ? Math.max(1, Math.ceil((p.progress / 100) * p.floors)) : p.floors;
+  const n = Math.min(fl, 12), fh = (H - 30) / Math.max(n, 6), bw = 150, x0 = 40, gy = H - 14;
+  const k = p.kalite, kolon = k >= 70 ? 7 : k >= 50 ? 5 : k >= 35 ? 3.5 : 2.5;
+  const beton = k >= 70 ? '#c9c6bf' : k >= 50 ? '#bdb8ad' : '#b3a58f';
+  const tilt = p.hasar ? 'rotate(3 115 136)' : '';
+  let g = `<rect x="0" y="${gy}" width="${W}" height="14" fill="#6b5234"/>`;
+  if (p.collapsed) {
+    g += `<path d="M30 ${gy} L60 ${gy - 30} L85 ${gy - 12} L120 ${gy - 40} L150 ${gy - 18} L190 ${gy - 26} L205 ${gy} Z" fill="#8a8378"/>`;
+    g += `<text x="115" y="30" fill="#ff7b7b" font-size="13" text-anchor="middle" font-weight="700">ENKAZ</text>`;
+    return `<svg viewBox="0 0 ${W} ${H}" class="kesit">${g}</svg>`;
+  }
+  if (p.phase === 'arsa' || p.phase === 'yatirim') {
+    g += p.phase === 'arsa' ? `<rect x="70" y="${gy - 40}" width="70" height="40" fill="#c49a6c"/><path d="M62 ${gy - 40} L105 ${gy - 68} L148 ${gy - 40} Z" fill="#9b3b2a"/><text x="115" y="22" fill="#ddd" font-size="12" text-anchor="middle">Eski ev · yıkılmayı bekliyor</text>`
+      : `<rect x="40" y="${gy}" width="150" height="10" fill="#4a3a26"/><text x="115" y="22" fill="#ddd" font-size="12" text-anchor="middle">Temel kazısı</text>`;
+    return `<svg viewBox="0 0 ${W} ${H}" class="kesit">${g}</svg>`;
+  }
+  let b = '';
+  for (let f = 0; f < n; f++) {
+    const y = gy - (f + 1) * fh;
+    b += `<rect x="${x0}" y="${y}" width="${bw}" height="3" fill="${beton}"/>`;
+    for (let c = 0; c < 4; c++) {
+      const cx = x0 + 4 + c * (bw - 8 - kolon) / 3;
+      b += `<rect x="${cx}" y="${y + 3}" width="${kolon}" height="${fh - 3}" fill="${beton}" stroke="#555" stroke-width="0.4"/>`;
+      if (k < 50 && (f + c) % 3 === 0) b += `<path d="M${cx + kolon / 2} ${y + 5} l2 4 l-3 4 l2 4" stroke="#e5484d" stroke-width="1" fill="none"/>`;
+    }
+    if (p.phase !== 'insaat' && k >= 45) for (let w = 0; w < 3; w++) b += `<rect x="${x0 + 18 + w * 45}" y="${y + fh * 0.3}" width="22" height="${fh * 0.4}" fill="#6fa8c9" opacity="0.8"/>`;
+  }
+  g += `<g transform="${tilt}">${b}</g>`;
+  if (fl > n) g += `<text x="${x0 + bw / 2}" y="12" fill="#aaa" font-size="10" text-anchor="middle">(+${fl - n} kat daha)</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" class="kesit">${g}</svg>`;
+}
+
+function icerik(p) {
+  if (p.collapsed) return `Bina yıkıldı. Enkazdan ${p.olu} kişi çıkarıldı. Bilirkişiler kolonlardaki demiri ve beton numunelerini inceliyor.`;
+  const k = p.kalite;
+  if (p.phase === 'arsa') return 'Arsa sahipleriyle pazarlık sürüyor. Eski evde hâlâ biri oturuyor.';
+  if (p.phase === 'yatirim') return 'Temel kazılıyor. Zemin etüdü raporu dosyada' + (k < 50 ? '… ama sayfaları kimse okumadı.' : ', kazı ona göre yapılıyor.');
+  if (k >= 75) return 'Kolonlar kalın, etriyeler sık bağlanmış. Beton numuneleri hedefi geçti. Depreme hazırlıklı.';
+  if (k >= 55) return 'Genel olarak düzgün. Birkaç yerde kalıp izi ve ince sıva çatlağı var.';
+  if (k >= 35) return 'Etriyeler seyrek, betonda çakıl yuvaları var. Sıva kusurları şimdilik kapatıyor.';
+  return 'Kolonlar ince, demir az, beton sulu. Dışı boyalı ama içi çürük. Kırmızı çizgiler çatlak.';
+}
+
+function hidePick() { $('pickPop').classList.add('hidden'); }
+
+function showPick(pk) {
+  if (!state || state.ending || mode === 'mini' || PHONE.isOpen() || !$('start').classList.contains('hidden')) return;
+  let html = '';
+  const p = pk.id != null ? state.projects.find((x) => x.id === pk.id) : null;
+  if (pk.kind === 'proje' && p) {
+    const cu = E.contractorUnits(p);
+    const ph = p.collapsed ? 'YIKILDI' : p.phase === 'insaat' ? `İnşaat %${Math.round(p.progress)}` : PHASE_TXT[p.phase];
+    html = `<h4>🏗️ ${esc(p.name)}</h4><div class="pp-meta">${esc(p.semt)} · ${ph} · ${p.floors} kat · ${p.daire} daire</div>
+      ${kesitSvg(p)}<p>${esc(icerik(p))}</p>
+      <div class="pp-row"><span>Kalite <b>${Math.round(p.kalite)}</b></span><span>Satılan <b>${p.onSatis + p.satilan}/${cu}</b></span>${p.gecikme > 0 ? `<span class="neg">Gecikme <b>${Math.round(p.gecikme)} ay</b></span>` : ''}</div>`;
+  } else if (pk.kind === 'isci' && p) {
+    const w = ISCI.isciSozu(state, p, pk.n, pk.baret);
+    html = `<h4>${w.durum === 'baret' ? '⛑️' : '👷'} ${esc(w.ad)}</h4><div class="pp-meta">${esc(p.name)} şantiyesi · ${esc(DIALECT_LABEL[w.dia] || '')}</div>
+      <p class="pp-quote">“${esc(w.soz)}”</p><div class="pp-ders"><b>Gerçek hayatta:</b> ${esc(w.ders)}</div>`;
+  } else if (pk.kind === 'magdur') {
+    const m = ISCI.magdurSozu(pk.tema, Math.floor(Math.random() * 9));
+    html = `<h4>📢 Mağdurlar</h4><div class="pp-meta">${p ? esc(p.name) + ' önünde' : 'Ofisinin önünde'} · ${state.m.toLocaleString('tr-TR')} mağdur</div>
+      <p class="pp-quote">“${esc(m.soz)}”</p><div class="pp-ders"><b>Gerçek hayatta:</b> ${esc(m.ders)}</div>`;
+  } else if (pk.kind === 'basin') {
+    html = `<h4>🎥 Muhabir</h4><p class="pp-quote">“Canlı yayındayız. Müteahhit firma ${esc(state.firma)} hâlâ açıklama yapmadı. Mağdurlar sabahtan beri burada.”</p>
+      <div class="pp-ders"><b>Gerçek hayatta:</b> Mağdurlar birlikte hareket edip avukat, basın ve tüketici örgütleriyle sesini duyurduğunda dosyalar hızlanır.</div>`;
+  } else if (pk.kind === 'polis') {
+    html = `<h4>🚓 Ekip otosu</h4><p class="pp-quote">“Savcılığın talimatıyla bekliyoruz. Beyefendi bir yere gitmesin.”</p><div class="pp-meta">Hukuki risk: <b class="neg">${Math.round(state.r)}</b></div>`;
+  } else if (pk.kind === 'ofis') {
+    html = `<h4>🏢 ${esc(state.firma)}</h4><div class="pp-meta">${esc(E.unvan(state))} · ${state.completed} proje · Net ${E.fmt(E.netWorth(state))}</div>
+      <div class="pp-menu"><button data-pm="tel">📱 Harç'ı aç</button><button data-pm="yeni" ${E.canStartProject(state) && mode === 'choose' ? '' : 'disabled'}>🏗️ Yeni proje</button>
+      <button data-pm="hayat">💎 Hayatım</button><button data-pm="gunluk">📜 Günlük</button></div>`;
+  }
+  if (!html) return;
+  SFX.play('click');
+  const el = $('pickPop');
+  el.innerHTML = `<button class="pp-x" aria-label="Kapat">✕</button>${html}`;
+  el.classList.remove('hidden');
+  const mob = window.innerWidth <= 860;
+  if (mob) { el.style.left = ''; el.style.top = ''; }
+  else {
+    const w = 300, h = el.offsetHeight || 260;
+    el.style.left = `${Math.max(10, Math.min(window.innerWidth - w - 10, pk.x + 14))}px`;
+    el.style.top = `${Math.max(60, Math.min(window.innerHeight - h - 10, pk.y - h / 2))}px`;
+  }
+  el.querySelector('.pp-x').onclick = hidePick;
+  el.querySelectorAll('[data-pm]').forEach((b) => (b.onclick = () => {
+    hidePick();
+    const a = b.dataset.pm;
+    if (a === 'tel') PHONE.open();
+    else if (a === 'yeni') askNewProject();
+    else {
+      $('side').classList.remove('closed');
+      document.querySelector(`.side-tabs button[data-tab="${a}"]`)?.click();
+    }
+  }));
+  if (p && pk.kind === 'proje') S3.focus(p);
+}
+
+// Kart açılınca sahnede küçük olay
+function sceneEvent(c) {
+  if (!sceneOk) return;
+  const who = `${c.speaker?.name || ''} ${c.speaker?.roleLabel || ''}`;
+  if (/Müfettiş|Denetim|denetçi/i.test(c.title) && c.projId != null) S3.event3d('denetim', c.projId);
+  else if (/Gözaltı|Operasyon|Baskın/i.test(c.title)) S3.event3d('polis');
+  if (/Pınar|muhabir|gazeteci|haber/i.test(who) || /Linç|İfşa/i.test(c.title)) S3.event3d('basin', c.projId);
+}
+
 function afterChange() {
   if (sceneOk) S3.sync(state);
   render();
@@ -246,6 +359,8 @@ function showCard(c) {
   $('resultBox').classList.add('hidden');
   $('card').scrollTop = 0;
   if (proj && sceneOk && window.innerWidth > 860) S3.focus(proj);
+  hidePick();
+  sceneEvent(c);
 }
 
 function choose(i) {
@@ -374,6 +489,7 @@ function askFlee() {
 
 function onKey(e) {
   if (e.key === 'Escape' && PHONE.isOpen()) return PHONE.close();
+  if (e.key === 'Escape') hidePick();
   if (PHONE.isOpen()) return;
   if (!$('modal').classList.contains('hidden') || !$('start').classList.contains('hidden') || !state) return;
   if (mode === 'choose' && /^[1-9]$/.test(e.key)) { const i = +e.key - 1; if (card && i < card.choices.length) choose(i); }

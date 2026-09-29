@@ -14,6 +14,9 @@ let renderer, scene, camera, controls, clock, sun, hemi, cityMat;
 const groups = new Map();
 let cranes = [], shake = 0, plane = null, focusTarget = null, sinking = [];
 let cars = [], clouds = [], particles = [], assetGroup = null, assetSig = '', yacht = null, rotors = [], seaMesh = null;
+// Tıklama, işçiler ve sahne olayları
+let pickCb = null, workers = [], envGroup = null, envSig = '', flashers = [], marchers = [], movers = [], pressCams = [], hoverT = 0;
+const raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
 const cx = (k) => (k - (GRID.cols - 1) / 2) * GRID.gap, cz = (k) => (k - (GRID.rows - 1) / 2) * GRID.gap;
 const SEA_Z = 52, BEACH_Z = 40;
 // Oyuncunun varlıkları için ayrılmış hücreler
@@ -95,6 +98,7 @@ export function init(canvas) {
   Object.assign(sun.shadow.camera, { left: -60, right: 60, top: 60, bottom: -60, far: 200 });
   scene.add(sun);
   buildWorld();
+  bindPicking(canvas);
   clock = new THREE.Clock();
   window.addEventListener('resize', resize);
   resize();
@@ -241,6 +245,8 @@ function buildProject(p) {
     const tape = box(11, 0.08, 0.08, mat('#e33', { emissive: '#600' })); tape.position.set(0, 1, 5.3); g.add(tape);
     g.add(Object.assign(labelSprite(`${p.name} ✝`, '#e33'), {}));
     g.children[g.children.length - 1].position.set(0, 6, 0);
+    const hit = new THREE.Mesh(new THREE.BoxGeometry(GRID.gap - 4, 4, GRID.gap - 4), HIT_MAT); hit.position.y = 2; g.add(hit);
+    g.userData.pick = { kind: 'proje', id: p.id };
     return g;
   }
   if (p.phase === 'arsa') {
@@ -300,9 +306,14 @@ function buildProject(p) {
     }
     if (p.kalite > 70) for (let i = 0; i < 4; i++) tree(rand(-6, 6), i % 2 ? 6 : -6, g);
   }
+  if (p.phase === 'insaat' || p.phase === 'yatirim') addWorkers(g, p);
   const lbl = labelSprite(p.name, p.done ? '#9ad17a' : '#ffd34d');
   lbl.position.set(0, (p.phase === 'arsa' || p.phase === 'yatirim' ? 5 : p.floors * FLOOR_H + 3), 0);
   g.add(lbl);
+  // Tıklanabilir alan: parselin tamamı
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(GRID.gap - 4, p.phase === 'arsa' || p.phase === 'yatirim' ? 4 : p.floors * FLOOR_H + 1, GRID.gap - 4), HIT_MAT);
+  hit.position.y = hit.geometry.parameters.height / 2; hit.userData.hitbox = true; g.add(hit);
+  g.userData.pick = { kind: 'proje', id: p.id };
   return g;
 }
 
@@ -343,6 +354,8 @@ function buildOffice(g, level, firma) {
   sign.position.set(0, h + 1.4, 0); o.add(sign);
   const sign2 = sign.clone(); sign2.rotation.y = Math.PI; o.add(sign2);
   const lbl = labelSprite('🏢 Senin ofisin', '#f4c20d'); lbl.position.set(0, h + 4, 0); lbl.scale.set(6.5, 1.2, 1); o.add(lbl);
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(9, h + 2, 9), HIT_MAT); hit.position.y = (h + 2) / 2; hit.userData.hitbox = true; o.add(hit);
+  o.userData.pick = { kind: 'ofis' };
   g.add(o);
   return p;
 }
@@ -455,8 +468,250 @@ function syncAssets(state) {
   else if (has('helikopter')) buildVilla(assetGroup, true);
   if (has('yat')) buildYacht(assetGroup);
   for (const k of ['galeri', 'dugun', 'tv', 'kulup', 'beton', 'otel']) if (has(k)) buildBiz(assetGroup, k);
-  assetGroup.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  assetGroup.traverse((o) => { if (o.isMesh && o.material !== HIT_MAT) { o.castShadow = true; o.receiveShadow = true; } });
   scene.add(assetGroup);
+}
+
+// ---------- Canlı sahne: işçiler, tıklama, mağdurlar, polis, basın ----------
+const HIT_MAT = new THREE.MeshBasicMaterial({ visible: false });
+const shared = (g) => { g.userData.shared = true; return g; };
+const G_BODY = shared(new THREE.BoxGeometry(0.5, 0.72, 0.3)), G_LEG = shared(new THREE.BoxGeometry(0.18, 0.55, 0.2));
+const G_ARM = shared(new THREE.BoxGeometry(0.14, 0.58, 0.16)), G_HEAD = shared(new THREE.SphereGeometry(0.2, 8, 6));
+const G_HELM = shared(new THREE.SphereGeometry(0.25, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2)), G_HIT = shared(new THREE.BoxGeometry(2.2, 2.6, 2.2));
+const mcache = {};
+const cm = (c, o) => mcache[c + (o ? JSON.stringify(o) : '')] || (mcache[c + (o ? JSON.stringify(o) : '')] = mat(c, o));
+
+function figure({ body = '#f28c28', legs = '#34495e', skin = '#d9a77c', helmet = '#f4c20d', scale = 0.75 } = {}) {
+  const f = new THREE.Group();
+  const lg = [];
+  for (const x of [-0.12, 0.12]) { const piv = new THREE.Group(); piv.position.set(x, 0.55, 0); const l = new THREE.Mesh(G_LEG, cm(legs)); l.position.y = -0.275; piv.add(l); f.add(piv); lg.push(piv); }
+  const b = new THREE.Mesh(G_BODY, cm(body)); b.position.y = 0.91; b.castShadow = true; f.add(b);
+  const ar = [];
+  for (const x of [-0.33, 0.33]) { const piv = new THREE.Group(); piv.position.set(x, 1.22, 0); const a = new THREE.Mesh(G_ARM, cm(body)); a.position.y = -0.27; piv.add(a); f.add(piv); ar.push(piv); }
+  const h = new THREE.Mesh(G_HEAD, cm(skin)); h.position.y = 1.5; f.add(h);
+  if (helmet) { const hm = new THREE.Mesh(G_HELM, cm(helmet)); hm.position.y = 1.55; f.add(hm); }
+  const hit = new THREE.Mesh(G_HIT, HIT_MAT); hit.position.y = 1; f.add(hit);
+  f.scale.setScalar(scale);
+  f.userData.legs = lg; f.userData.arms = ar;
+  return f;
+}
+
+function addWorkers(g, p) {
+  const n = p.phase === 'yatirim' ? 2 : 3 + p.tier;
+  const unsafe = p.kalite < 45;
+  for (let i = 0; i < n; i++) {
+    const helm = !(unsafe && i % 2 === 0);
+    const w = figure({ body: i % 3 === 2 ? '#2d6cdf' : '#f28c28', helmet: helm ? (i === 0 ? '#ffffff' : '#f4c20d') : null, skin: ['#d9a77c', '#b98563', '#e8c39e'][i % 3] });
+    // Parselin kenarında bir hat boyunca gidip gelir
+    const side = i % 4, r = 5.1, span = rand(2.5, 4.5), off = rand(-2, 2);
+    const A = new THREE.Vector3(), B = new THREE.Vector3();
+    if (side === 0) { A.set(off - span, 0, r); B.set(off + span, 0, r); }
+    else if (side === 1) { A.set(r, 0, off - span); B.set(r, 0, off + span); }
+    else if (side === 2) { A.set(off - span, 0, -r); B.set(off + span, 0, -r); }
+    else { A.set(-r, 0, off - span); B.set(-r, 0, off + span); }
+    w.position.copy(A);
+    w.userData = { ...w.userData, A, B, k: Math.random(), dir: 1, speed: rand(0.12, 0.22), work: 0, pick: { kind: 'isci', id: p.id, n: i, baret: helm } };
+    g.add(w); workers.push(w);
+  }
+}
+
+const BANNERS = {
+  cokme: ['KATİL MÜTEAHHİT', 'ADALET İSTİYORUZ', 'BETON RAPORU NEREDE?', 'UNUTMAYACAĞIZ'],
+  tapu: ['#TapumuVer', 'TAPUMU VER!', 'EVİMİZ NEREDE?', '3 YILDIR KİRADAYIZ'],
+  gecikme: ['EVİMİZ NEREDE?', 'SÖZ VERDİN!', 'KİRA ÖDEMEKTEN BIKTIK', 'MAĞDURUZ'],
+};
+
+function police(x, z, ry) {
+  const c = new THREE.Group();
+  const body = box(1.15, 0.45, 2.2, cm('#1d3a8a', { roughness: 0.5 })); body.position.y = 0.4; c.add(body);
+  const door = box(1.17, 0.2, 1.1, cm('#ffffff')); door.position.y = 0.42; c.add(door);
+  const cab = box(0.95, 0.4, 1.1, cm('#223', { roughness: 0.2 })); cab.position.set(0, 0.8, -0.1); c.add(cab);
+  const r = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.16, 0.3), new THREE.MeshBasicMaterial({ color: '#ff2030' })); r.position.set(-0.22, 1.08, -0.1); c.add(r);
+  const b = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.16, 0.3), new THREE.MeshBasicMaterial({ color: '#2060ff' })); b.position.set(0.22, 1.08, -0.1); c.add(b);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#ff2030', blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+  glow.position.set(0, 1.2, -0.1); glow.scale.setScalar(4); c.add(glow);
+  flashers.push({ r, b, glow });
+  const hit = new THREE.Mesh(G_HIT, HIT_MAT); hit.scale.set(1, 0.8, 1.6); hit.position.y = 0.8; c.add(hit);
+  c.position.set(x, 0, z); c.rotation.y = ry;
+  c.userData.pick = { kind: 'polis' };
+  return c;
+}
+
+let _glow = null;
+function glowTex() {
+  if (_glow) return _glow;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const g = cv.getContext('2d'); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  _glow = new THREE.CanvasTexture(cv);
+  return _glow;
+}
+
+function syncEnv(st) {
+  const m = st.m || 0, tapu = (st.sosyal && st.sosyal.tapu) || 0;
+  const live = st.projects.filter((p) => p.slot >= 0);
+  const col = live.find((p) => p.collapsed);
+  const late = live.filter((p) => !p.done && !p.collapsed && p.gecikme >= 3).sort((a, b) => b.gecikme - a.gecikme)[0];
+  const target = col || late || null;
+  const protest = !!col || m >= 8 || tapu >= 800;
+  const crowd = protest ? Math.min(14, 4 + Math.floor(m / 12) + (tapu >= 5000 ? 3 : 0)) : 0;
+  const press = protest && (!!col || m >= 20 || tapu >= 800);
+  const pol = st.r >= 75 || st.ending === 'iade' || st.ending === 'hapis' || st.ending === 'kovuldun';
+  const tema = col ? 'cokme' : tapu >= 800 ? 'tapu' : 'gecikme';
+  const sig = [crowd, press, pol, target ? target.id : 'ofis', tema].join('|');
+  if (sig === envSig) return;
+  envSig = sig;
+  if (envGroup) { const old = envGroup; flashers = flashers.filter((f) => !isChildOf(f.glow, old)); scene.remove(old); old.traverse((o) => { if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); }); }
+  envGroup = new THREE.Group(); marchers = []; pressCams = [];
+  const base = target ? slotPos(target.slot) : cell(RESERVED.ofis);
+  if (crowd) {
+    const txt = BANNERS[tema];
+    const signs = txt.map((t) => textSign(t, '#f5f1e6', t.startsWith('#') ? '#1d6fd8' : '#b3121f', 2.4, 0.8));
+    for (let i = 0; i < crowd; i++) {
+      const row = i % 2, x = (Math.floor(i / 2) - (crowd / 4)) * 1.15 + rand(-0.2, 0.2);
+      const f = figure({ body: ['#6d4c8f', '#2a9d8f', '#8d5b3f', '#c1121f', '#555f6b', '#e9c46a'][i % 6], legs: '#2b2d42', helmet: null, skin: ['#d9a77c', '#b98563', '#e8c39e'][i % 3], scale: 0.7 });
+      f.position.set(base.x + x, 0, base.z + 6.6 + row * 1.1);
+      f.rotation.y = Math.PI + rand(-0.3, 0.3);
+      if (i % 2 === 0) {
+        const sg = signs[(i / 2) % signs.length].clone();
+        const pole = box(0.06, 1.8, 0.06, cm('#6b4b2a')); pole.position.set(0.33, 1.9, 0.1); f.add(pole);
+        sg.position.set(0.33, 2.9, 0.12); sg.rotation.y = Math.PI; f.add(sg);
+        f.userData.arms[1].rotation.x = -2.6;
+      } else f.userData.arms.forEach((a) => (a.rotation.z = 0));
+      f.userData.phase = rand(0, 6); f.userData.pick = { kind: 'magdur', id: target ? target.id : null, tema };
+      envGroup.add(f); marchers.push(f);
+    }
+  }
+  if (press) {
+    const r = figure({ body: '#222831', legs: '#393e46', helmet: null, scale: 0.7 });
+    r.position.set(base.x + 6.2, 0, base.z + 9.2); r.rotation.y = Math.PI * 0.8;
+    const cam = box(0.35, 0.3, 0.5, cm('#111')); cam.position.set(0.25, 1.55, 0.35); r.add(cam);
+    const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#ffffff', blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 }));
+    fl.position.set(0.25, 1.6, 0.7); fl.scale.setScalar(3); r.add(fl);
+    const mic = textSign('HABER', '#c1121f', '#fff', 1.1, 0.35); mic.position.set(-0.4, 2.3, 0); r.add(mic);
+    r.userData.pick = { kind: 'basin', id: target ? target.id : null };
+    envGroup.add(r); pressCams.push({ fl, t: rand(0, 2) });
+  }
+  if (pol) {
+    const o = cell(RESERVED.ofis);
+    envGroup.add(police(o.x + 5.5, o.z + 6.8, Math.PI / 2 + 0.3));
+    if (target) envGroup.add(police(base.x - 6, base.z + 6.8, -Math.PI / 2 - 0.2));
+  }
+  scene.add(envGroup);
+}
+
+function tickLife(dt, t) {
+  for (const w of workers) {
+    const u = w.userData;
+    if (u.work > 0) {
+      u.work -= dt;
+      u.arms[1].rotation.x = -1.2 + Math.sin(t * 9) * 0.6;
+      u.legs[0].rotation.x = u.legs[1].rotation.x = 0;
+      if (u.work <= 0) u.arms[1].rotation.x = 0;
+      continue;
+    }
+    u.k += dt * u.speed * u.dir;
+    if (u.k >= 1 || u.k <= 0) { u.k = Math.max(0, Math.min(1, u.k)); u.dir *= -1; u.work = rand(1, 4); }
+    w.position.lerpVectors(u.A, u.B, u.k);
+    const dx = (u.B.x - u.A.x) * u.dir, dz = (u.B.z - u.A.z) * u.dir;
+    w.rotation.y = Math.atan2(dx, dz);
+    const sw = Math.sin(t * 8 + u.k * 20) * 0.6;
+    u.legs[0].rotation.x = sw; u.legs[1].rotation.x = -sw; u.arms[0].rotation.x = -sw * 0.7; u.arms[1].rotation.x = sw * 0.7;
+  }
+  for (const f of marchers) {
+    const ph = t * 3 + f.userData.phase;
+    f.position.y = Math.max(0, Math.sin(ph)) * 0.12;
+    f.userData.arms[0].rotation.x = -2.4 + Math.sin(ph) * 0.5;
+  }
+  const on = Math.floor(t * 4) % 2 === 0;
+  for (const fl of flashers) {
+    fl.r.material.color.set(on ? '#ff2030' : '#330008'); fl.b.material.color.set(on ? '#000833' : '#2060ff');
+    fl.glow.material.color.set(on ? '#ff2030' : '#2060ff');
+  }
+  for (const pc of pressCams) {
+    pc.t -= dt;
+    if (pc.t <= 0) { pc.t = rand(0.8, 3); pc.fl.material.opacity = 1; }
+    else pc.fl.material.opacity = Math.max(0, pc.fl.material.opacity - dt * 6);
+  }
+  for (let i = movers.length - 1; i >= 0; i--) {
+    const mv = movers[i]; mv.t += dt;
+    const k = mv.t / mv.dur;
+    if (k >= 1) { mv.stage++; mv.t = 0; if (mv.stage >= mv.path.length - 1) { scene.remove(mv.o); flashers = flashers.filter((f) => !isChildOf(f.glow, mv.o)); movers.splice(i, 1); continue; } }
+    const a = mv.path[mv.stage], b = mv.path[mv.stage + 1];
+    mv.dur = a.w || Math.max(0.5, a.p.distanceTo(b.p) / 12);
+    const kk = Math.min(1, mv.t / mv.dur);
+    mv.o.position.lerpVectors(a.p, b.p, a.w ? 0 : kk * kk * (3 - 2 * kk));
+    if (mv.flash) { const f = Math.floor(t * 5) % 2 === 0; mv.flash.material.color.set(f ? '#ffb000' : '#442200'); }
+  }
+  // Masaüstünde fare üstündeki şeye göre imleç
+  hoverT -= dt;
+}
+
+// Tek seferlik sahne olayları (kart açılınca)
+export function event3d(kind, projId) {
+  if (!scene) return;
+  const p = projId != null ? [...groups.entries()].find(([id]) => id === projId) : null;
+  const base = p ? p[1].position.clone() : cell(RESERVED.ofis);
+  if (kind === 'denetim') {
+    const c = carMesh('#f4f4f4');
+    const stripe = box(1.12, 0.12, 2.12, cm('#1d6fd8')); stripe.position.y = 0.45; c.add(stripe);
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.15, 0.25), new THREE.MeshBasicMaterial({ color: '#ffb000' })); lamp.position.set(0, 1.08, -0.1); c.add(lamp);
+    const lbl = labelSprite('🚨 Denetim', '#ffb000'); lbl.scale.set(4.5, 0.85, 1); lbl.position.y = 2.4; c.add(lbl);
+    const z = base.z + GRID.gap / 2 - 0.75;
+    c.rotation.y = Math.PI / 2;
+    const path = [{ p: new THREE.Vector3(base.x - 45, 0, z) }, { p: new THREE.Vector3(base.x - 2, 0, z) }, { p: new THREE.Vector3(base.x - 2, 0, z), w: 9 }, { p: new THREE.Vector3(base.x - 2, 0, z) }, { p: new THREE.Vector3(base.x + 60, 0, z) }];
+    c.position.copy(path[0].p); scene.add(c);
+    movers.push({ o: c, path, stage: 0, t: 0, dur: 3, flash: lamp });
+  } else if (kind === 'basin') {
+    for (let i = 0; i < 6; i++) setTimeout(() => burst(base.clone().add(new THREE.Vector3(rand(-5, 5), rand(1, 3), 7 + rand(0, 2))), ['#ffffff', '#fffbe0'], 14, 1.2, 0.35, 0, 1.1), i * 260 + rand(0, 120));
+  } else if (kind === 'polis') {
+    const o = cell(RESERVED.ofis);
+    const c = police(0, 0, Math.PI / 2);
+    const z = o.z + GRID.gap / 2 - 0.75;
+    const path = [{ p: new THREE.Vector3(o.x - 50, 0, z) }, { p: new THREE.Vector3(o.x + 1, 0, z) }, { p: new THREE.Vector3(o.x + 1, 0, z), w: 12 }, { p: new THREE.Vector3(o.x + 1, 0, z) }];
+    c.position.copy(path[0].p); scene.add(c);
+    movers.push({ o: c, path, stage: 0, t: 0, dur: 3 });
+  }
+}
+
+export function onPick(cb) { pickCb = cb; }
+
+function pickAt(clientX, clientY) {
+  const r = renderer.domElement.getBoundingClientRect();
+  pointer.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+  raycaster.setFromCamera(pointer, camera);
+  const roots = [...groups.values(), ...(assetGroup ? [assetGroup] : []), ...(envGroup ? [envGroup] : [])];
+  const hits = raycaster.intersectObjects(roots, true);
+  // Önce en özel (işçi/mağdur/polis) olanı, sonra bina
+  let best = null;
+  for (const h of hits.slice(0, 8)) {
+    for (let o = h.object; o; o = o.parent) if (o.userData && o.userData.pick) {
+      const pk = o.userData.pick;
+      if (!best) best = pk;
+      if (pk.kind !== 'proje' && pk.kind !== 'ofis') return pk;
+      break;
+    }
+  }
+  return best;
+}
+
+function bindPicking(canvas) {
+  let down = null;
+  canvas.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+  canvas.addEventListener('pointerup', (e) => {
+    if (!down || !pickCb) return;
+    const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y), dtm = performance.now() - down.t;
+    down = null;
+    if (moved > 8 || dtm > 600) return;
+    const pk = pickAt(e.clientX, e.clientY);
+    if (pk) pickCb({ ...pk, x: e.clientX, y: e.clientY });
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse' || hoverT > 0 || e.buttons) return;
+    hoverT = 0.12;
+    canvas.style.cursor = pickAt(e.clientX, e.clientY) ? 'pointer' : '';
+  });
 }
 
 // ---------- Efektler ----------
@@ -488,9 +743,11 @@ function dust(pos) { burst(pos.clone().add(new THREE.Vector3(0, 2, 0)), ['#9a938
 
 function disposeGroup(g) {
   scene.remove(g);
-  g.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+  g.traverse((o) => { if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); });
   cranes = cranes.filter((c) => !g.userData.cranes.includes(c));
+  workers = workers.filter((w) => w.parent && w.parent !== g && !isChildOf(w, g));
 }
+const isChildOf = (o, g) => { for (let x = o; x; x = x.parent) if (x === g) return true; return false; };
 
 export function sync(state) {
   const seen = new Set();
@@ -508,6 +765,7 @@ export function sync(state) {
   }
   for (const [id, g] of groups) if (!seen.has(id)) { disposeGroup(g); groups.delete(id); }
   syncAssets(state);
+  syncEnv(state);
 }
 
 export function focus(p) {
@@ -546,6 +804,7 @@ function tick() {
   }
   for (const cl of clouds) { cl.position.x += cl.userData.v * dt; if (cl.position.x > 170) cl.position.x = -170; }
   for (const r of rotors) r.rotation.y += dt * 18;
+  tickLife(dt, t);
   if (yacht) { yacht.position.y = 0.2 + Math.sin(t * 1.3) * 0.15; yacht.rotation.z = Math.sin(t * 0.9) * 0.03; }
   if (seaMesh) seaMesh.position.y = 0.08 + Math.sin(t * 0.8) * 0.05;
   for (let i = particles.length - 1; i >= 0; i--) {
@@ -593,4 +852,13 @@ function tick() {
     camera.position.x += (Math.random() - 0.5) * a; camera.position.y += (Math.random() - 0.5) * a;
   }
   renderer.render(scene, camera);
+}
+
+// Test yardımcısı: tıklanabilir bir şeyin ekrandaki yeri
+export function _screenOf(kind) {
+  const r = renderer.domElement.getBoundingClientRect();
+  const list = kind === 'isci' ? workers : kind === 'magdur' ? marchers : kind === 'ofis' && assetGroup ? assetGroup.children.filter((o) => o.userData.pick) : [];
+  const o = list[0]; if (!o) return null;
+  const v = new THREE.Vector3(); o.getWorldPosition(v); v.y += 0.6; v.project(camera);
+  return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height, pick: pickAt(r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height) };
 }

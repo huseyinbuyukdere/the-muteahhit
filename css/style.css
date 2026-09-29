@@ -388,3 +388,21 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   .tp-desk { grid-template-columns: repeat(3, 1fr); }
   .site .cell { font-size: 26px; padding: 8px 0; }
 }
+
+/* ---------- 3B sahnede tıklama balonu ---------- */
+.pick-pop { position: fixed; z-index: 60; width: 300px; max-height: 70vh; overflow: auto; background: rgba(18, 22, 30, 0.96); color: #eee; border: 1px solid #f4c20d55; border-radius: 14px; padding: 12px 14px; box-shadow: 0 12px 32px rgba(0,0,0,.45); font-size: 14px; animation: ppIn .18s ease-out; }
+.pick-pop h4 { margin: 0 24px 4px 0; font-size: 16px; }
+.pick-pop p { margin: 8px 0; line-height: 1.4; }
+.pick-pop .pp-meta { color: #aab; font-size: 12px; }
+.pick-pop .pp-quote { font-style: italic; color: #ffe9a8; }
+.pick-pop .pp-ders { background: #1e3a2a; border-left: 3px solid #46a758; padding: 6px 8px; border-radius: 6px; font-size: 12.5px; line-height: 1.4; }
+.pick-pop .pp-row { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: #ccd; }
+.pick-pop .pp-x { position: absolute; top: 6px; right: 8px; background: none; border: 0; color: #aaa; font-size: 16px; cursor: pointer; }
+.pick-pop .pp-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+.pick-pop .pp-menu button { padding: 9px 6px; border-radius: 9px; border: 1px solid #444; background: #262c38; color: #fff; cursor: pointer; font-size: 13px; }
+.pick-pop .pp-menu button:hover:not(:disabled) { background: #33405a; }
+.pick-pop .pp-menu button:disabled { opacity: .45; cursor: default; }
+.pick-pop .kesit { width: 100%; height: auto; background: #0e1320; border-radius: 8px; margin-top: 8px; }
+.pick-pop .neg { color: #ff8a8d; }
+@keyframes ppIn { from { opacity: 0; transform: translateY(6px) scale(.97); } to { opacity: 1; transform: none; } }
+@media (max-width: 860px) { .pick-pop { left: 10px !important; right: 10px; top: 118px !important; width: auto; max-height: 42vh; } .pick-pop .kesit { max-height: 110px; } }
