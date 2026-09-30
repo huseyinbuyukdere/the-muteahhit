@@ -1,4 +1,5 @@
 // THE MÜTEAHHİT — arayüz akışı.
+import { ekDuzelt as ek } from './ek.js';
 import * as E from './engine.js';
 import * as S3 from './scene3d.js';
 import { REHBER, KAYNAKLAR } from './data/rehber.js';
@@ -156,9 +157,9 @@ function render() {
   }
   renderProjects();
   PHONE.badge();
-  $('gunluk').innerHTML = s.log.map((l) => `<div class="log-line">${esc(l)}</div>`).join('') || '<p class="log-line">Henüz bir şey olmadı.</p>';
+  $('gunluk').innerHTML = s.log.map((l) => `<div class="log-line">${esc(ek(l))}</div>`).join('') || '<p class="log-line">Henüz bir şey olmadı.</p>';
   const news = [...s.news, ...FACTS];
-  const tt = news.map((n) => `● ${n}`).join('     ');
+  const tt = news.map((n) => `● ${ek(n)}`).join('     ');
   if ($('tickerText').textContent !== tt) $('tickerText').textContent = tt;
   $('kacBtn').classList.toggle('hidden', !E.canFlee(s));
   $('yeniProjeBtn').disabled = !E.canStartProject(s);
@@ -352,7 +353,7 @@ function afterChange() {
 
 function toast(txt, cls = '') {
   const d = document.createElement('div');
-  d.className = `toast ${cls}`; d.textContent = txt;
+  d.className = `toast ${cls}`; d.textContent = ek(txt);
   $('toasts').appendChild(d);
   setTimeout(() => d.classList.add('out'), 3200);
   setTimeout(() => d.remove(), 3800);
@@ -376,7 +377,7 @@ function showCard(c) {
   $('cardPhase').textContent = E.PHASE_LABEL[c.phase] || c.phase;
   $('cardPhase').className = `tag ${c.phase}`;
   $('cardProj').textContent = proj ? `${proj.name} · ${proj.semt}` : E.dateLabel(state.t);
-  $('cardTitle').textContent = c.title;
+  $('cardTitle').textContent = ek(c.title);
   const ban = c.banner || BANNER[c.phase];
   $('cardBanner').textContent = ban ? `🔴 ${ban}` : '';
   $('cardBanner').classList.toggle('hidden', !ban);
@@ -386,10 +387,10 @@ function showCard(c) {
     $('spEmoji').textContent = sp.emoji || '🗣️';
     $('spName').textContent = sp.name;
     $('spMeta').textContent = [sp.roleLabel, sp.label].filter(Boolean).join(' · ');
-    $('spQuote').textContent = `“${sp.quote}”`;
+    $('spQuote').textContent = `“${ek(sp.quote)}”`;
   }
-  $('cardText').textContent = c.text;
-  $('cardTwist').textContent = c.twist ? `⚠ ${c.twist}` : '';
+  $('cardText').textContent = ek(c.text);
+  $('cardTwist').textContent = c.twist ? `⚠ ${ek(c.twist)}` : '';
   $('cardTwist').classList.toggle('hidden', !c.twist);
   $('choices').innerHTML = '';
   c.choices.forEach((ch, i) => {
@@ -397,7 +398,7 @@ function showCard(c) {
     const isMini = ch.act?.type === 'mini' || ch.act?.mini;
     const risky = !isMini && (ch.act?.type === 'gamble' || (ch.act?.type === 'esc' && (ch.act.end || ch.act.risk)));
     const biter = /(^|\s)E:/.test(ch.fx || '') && !c.finalStage;
-    b.innerHTML = `<b>${i + 1}.</b> ${isMini ? '🎮 ' : ''}${esc(ch.label)}${risky && !/🎲/.test(ch.label) ? ' 🎲' : ''}${biter ? ' <span class="biter">🏁 kariyerin biter</span>' : ''}`;
+    b.innerHTML = `<b>${i + 1}.</b> ${isMini ? '🎮 ' : ''}${esc(ek(ch.label))}${risky && !/🎲/.test(ch.label) ? ' 🎲' : ''}${biter ? ' <span class="biter">🏁 kariyerin biter</span>' : ''}`;
     if (risky) b.classList.add('risky');
     if (isMini) b.classList.add('minich');
     b.onclick = () => choose(i);
@@ -438,7 +439,7 @@ function doChoose(i, mini) {
   if (rx) { $('rxEmoji').textContent = c.speaker.emoji; $('rxQuote').innerHTML = `<b>${esc(c.speaker.name)}:</b> “${esc(rx)}”`; $('reaction').className = `speaker reaction ${mood >= 0 ? 'good' : 'bad'}`; }
   $('choices').classList.add('hidden');
   $('resultBox').classList.remove('hidden');
-  $('resultText').textContent = (mini.score != null ? `🎮 ${Math.round(mini.score * 100)}/100 — ` : '') + (res.gamble === true ? '🎲 TUTTU! ' : res.gamble === false ? '🎲 TUTMADI! ' : '') + res.result;
+  $('resultText').textContent = (mini.score != null ? `🎮 ${Math.round(mini.score * 100)}/100 — ` : '') + (res.gamble === true ? '🎲 TUTTU! ' : res.gamble === false ? '🎲 TUTMADI! ' : '') + ek(res.result);
   $('deltas').innerHTML = deltaChips(res.deltas);
   if (!state.ending) for (const r of ROZ.kontrol(state)) { (state.rozetler ||= []).push(r.id); toast(`${r.emoji} Rozet kazandın: ${r.ad}`, 'rozetT'); SFX.play('goal'); }
   $('events').innerHTML = res.events.filter((e) => e[0] !== 'faiz').map(eventLine).join('');
