@@ -10,7 +10,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
   <script type="importmap">
   { "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
@@ -68,6 +68,7 @@
     <div id="toasts"></div>
 
     <section id="card" class="card">
+      <div id="damga" class="damga hidden"></div>
       <div id="cardBanner" class="banner hidden"></div>
       <div class="card-head"><span id="cardPhase" class="tag"></span><span id="cardProj" class="proj"></span></div>
       <h2 id="cardTitle"></h2>
@@ -79,6 +80,7 @@
       <p id="cardTwist" class="twist"></p>
       <div id="choices" class="choices"></div>
       <div id="resultBox" class="hidden">
+        <p id="secim" class="secim"></p>
         <div id="reaction" class="speaker reaction hidden"><div class="avatar" id="rxEmoji"></div><div class="bubble" id="rxQuote"></div></div>
         <p id="resultText" class="result"></p>
         <div id="deltas" class="deltas"></div>
@@ -147,6 +149,6 @@
   </div>
 
   <div id="loading">Şantiye kuruluyor…</div>
-  <script type="module" src="js/main.js?v=9"></script>
+  <script type="module" src="js/main.js?v=10"></script>
 </body>
 </html>

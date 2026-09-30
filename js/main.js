@@ -22,6 +22,8 @@ const STATS = [
   ['r', 'Hukuki risk', '#e5484d', true], ['v', 'Vicdan', '#b48ce0', false],
 ];
 const LBL = { n: 'Kasa', b: 'Borç', i: 'İtibar', g: 'Yatırımcı güveni', e: 'Ekip', r: 'Hukuki risk', v: 'Vicdan', k: 'Kalite', p: 'İlerleme', m: 'Mağdur', d: 'Gecikme', s: 'Arsa sahibi memnuniyeti', h: 'Arsa sahibi payı', o: 'Ön satış', x: 'Vergiden kaçırılan', y: 'Yatırımcı parası', a: 'Piyasa' };
+const KISA = { g: 'Yatırımcı', s: 'Arsa sahibi', h: 'Arsa payı', x: 'Vergi kaçağı', y: 'Yatırımcı parası' };
+const IKON = { n: '💰', b: '🏦', i: '⭐', g: '🤝', e: '👷', r: '⚖️', v: '😇', k: '🧱', p: '🏗️', m: '😢', d: '⏳', s: '🧓', h: '📐', o: '🔑', x: '🧾', y: '💼', a: '📈' };
 const INVERT = new Set(['b', 'r', 'm', 'd', 'h']);
 const NEUTRAL = new Set(['y', 'x', 'o']);
 const BANNER = { genel: 'SON DAKİKA', kacis: 'ŞOK', cark: 'ALARM', hayat: 'MAGAZİN', teslim: 'ANAHTAR GÜNÜ' };
@@ -372,6 +374,8 @@ function floatMoney(v) {
 
 function showCard(c) {
   card = c; mode = 'choose';
+  if ($('damga')) $('damga').className = 'damga hidden';
+  $('card').classList.remove('secildi');
   const proj = c.projId != null ? state.projects.find((p) => p.id === c.projId) : null;
   $('card').style.animation = 'none'; void $('card').offsetWidth; $('card').style.animation = '';
   $('cardPhase').textContent = E.PHASE_LABEL[c.phase] || c.phase;
@@ -438,12 +442,15 @@ function doChoose(i, mini) {
   $('reaction').classList.toggle('hidden', !rx);
   if (rx) { $('rxEmoji').textContent = c.speaker.emoji; $('rxQuote').innerHTML = `<b>${esc(c.speaker.name)}:</b> “${esc(rx)}”`; $('reaction').className = `speaker reaction ${mood >= 0 ? 'good' : 'bad'}`; }
   $('choices').classList.add('hidden');
+  $('card').classList.add('secildi');
+  $('secim').textContent = `➜ ${ek(c.choices[i].label)}`;
   $('resultBox').classList.remove('hidden');
   $('resultText').textContent = (mini.score != null ? `🎮 ${Math.round(mini.score * 100)}/100 — ` : '') + (res.gamble === true ? '🎲 TUTTU! ' : res.gamble === false ? '🎲 TUTMADI! ' : '') + ek(res.result);
   $('deltas').innerHTML = deltaChips(res.deltas);
   if (!state.ending) for (const r of ROZ.kontrol(state)) { (state.rozetler ||= []).push(r.id); toast(`${r.emoji} Rozet kazandın: ${r.ad}`, 'rozetT'); SFX.play('goal'); }
   $('events').innerHTML = res.events.filter((e) => e[0] !== 'faiz').map(eventLine).join('');
-  $('ders').innerHTML = c.ders ? `💡 <b>Gerçek hayatta:</b> ${esc(c.ders)}` : '';
+  $('ders').innerHTML = dersHtml(c.ders, res.deltas);
+  damga(res, mini);
   $('ders').classList.toggle('hidden', !c.ders);
   $('devamBtn').textContent = state.ending ? 'Sonu gör ▸' : 'Devam ▸';
   // Sıradaki ayın merak uyandıran fragmanı
@@ -488,6 +495,34 @@ function doChoose(i, mini) {
   if (state.ending) E.clearSave(); else E.save(state);
 }
 
+// Gerçek hayatta notu: kötü bir yola saptıysan kısa hali açık gelir, yoksa tıklayınca açılır (az yazı)
+function dersHtml(ders, deltas) {
+  if (!ders) return '';
+  const kotu = deltas.some(([k, v]) => (k === 'v' && v < 0) || (k === 'm' && v > 0) || (k === 'x' && v > 0));
+  const i = ders.search(/[.!?](\s|$)/);
+  const ilk = i > 0 ? ders.slice(0, i + 1) : ders, kalan = i > 0 ? ders.slice(i + 1).trim() : '';
+  if (kotu) return `<div class="ders-kotu">⚠️ <b>Gerçek hayatta:</b> ${esc(ilk)}${kalan ? ` <details><summary>devamı</summary>${esc(kalan)}</details>` : ''}</div>`;
+  return `<details><summary>💡 Gerçek hayatta ne olur?</summary>${esc(ders)}</details>`;
+}
+
+// Seçimden sonra karta basılan mühür
+function damga(res, mini) {
+  const el = $('damga');
+  if (!el) return;
+  const d = {}; for (const [k, v] of res.deltas) d[k] = (d[k] || 0) + v;
+  let t = null, cls = '';
+  if (res.gamble === true) { t = 'TUTTU'; cls = 'sari'; }
+  else if (res.gamble === false) { t = 'TUTMADI'; cls = 'kirmizi'; }
+  else if ((d.v || 0) <= -4 || (d.m || 0) > 0) { t = 'KİRLİ İŞ'; cls = 'kirmizi'; }
+  else if (mini.score != null && mini.score >= 0.8) { t = 'USTACA'; cls = 'yesil'; }
+  else if ((d.v || 0) >= 3) { t = 'TEMİZ İŞ'; cls = 'yesil'; }
+  else if ((d.n || 0) > 0.5) { t = 'KÂRLI'; cls = 'sari'; }
+  el.className = 'damga hidden';
+  if (!t) return;
+  el.textContent = t; void el.offsetWidth;
+  el.className = `damga ${cls}`;
+}
+
 function deltaChips(deltas) {
   const agg = new Map();
   for (const [k, v] of deltas) agg.set(k, (agg.get(k) || 0) + v);
@@ -503,7 +538,7 @@ function deltaChips(deltas) {
     if (val === 0) continue;
     const sign = v > 0 ? '+' : '−';
     const good = NEUTRAL.has(k) ? null : (v > 0) !== INVERT.has(k);
-    out.push(`<span class="chip ${good === null ? '' : good ? 'good' : 'bad'}">${LBL[k]} ${k === 'o' ? '' : sign}${val}</span>`);
+    out.push(`<span class="chip ${good === null ? '' : good ? 'good' : 'bad'}" title="${LBL[k]}" style="animation-delay:${out.length * 70}ms">${IKON[k] || ''} ${KISA[k] || LBL[k]} <b>${k === 'o' ? '' : sign}${val}</b></span>`);
   }
   return out.join('');
 }
