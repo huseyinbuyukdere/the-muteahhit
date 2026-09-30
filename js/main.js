@@ -9,6 +9,8 @@ import * as PHONE from './phone.js';
 import * as MINI from './mini.js';
 import * as ISCI from './data/isci.js';
 import { DIALECT_LABEL } from './data/dialect.js';
+import * as ROZ from './rozet.js';
+import { sonKarti } from './kart.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -43,7 +45,9 @@ function boot() {
   $('firmaInput').placeholder = FIRMA_ADLARI[Math.floor(Math.random() * FIRMA_ADLARI.length)];
   $('muteBtn').textContent = SFX.isMuted() ? '🔇' : '🔊';
   $('muteBtn').onclick = () => { $('muteBtn').textContent = SFX.toggleMute() ? '🔇' : '🔊'; };
+  if ($('baslaSec')) baslaSecCiz();
   $('yeniBtn').onclick = () => startGame(false);
+  if ($('kartBtn')) $('kartBtn').onclick = kartIndir;
   $('devamKariyerBtn').onclick = () => startGame(true);
   $('yenidenBtn').onclick = () => { $('ending').classList.add('hidden'); startGame(false); };
   document.querySelectorAll('[data-open]').forEach((b) => (b.onclick = () => openModal(b.dataset.open)));
@@ -76,7 +80,7 @@ function startGame(resume) {
     card = E.drawCard(state);
   } else {
     E.clearSave();
-    state = E.newGame();
+    state = E.newGame(baslaSecili());
     const f = $('firmaInput').value.trim() || $('firmaInput').placeholder;
     state.firma = f;
     try { localStorage.setItem('muteahhit-firma', $('firmaInput').value.trim()); } catch { /* yok say */ }
@@ -87,7 +91,34 @@ function startGame(resume) {
   showCard(card);
 }
 
+const BASLA_KEY = 'muteahhit-basla';
+function baslaSecili() { try { const k = localStorage.getItem(BASLA_KEY); if (E.BASLANGIC && E.BASLANGIC[k]) return k; } catch { /* yok say */ } return 'kalfa'; }
+function baslaSecCiz() {
+  const sec = baslaSecili();
+  $('baslaSec').innerHTML = Object.entries(E.BASLANGIC || {}).map(([k, b]) =>
+    `<button class="basla-kart${k === sec ? ' secili' : ''}" role="radio" aria-checked="${k === sec}" data-k="${k}"><span class="be">${b.emoji}</span><b>${esc(b.ad)}</b><small>${esc(b.kisa)}</small></button>`).join('');
+  $('baslaSec').querySelectorAll('button').forEach((b) => (b.onclick = () => {
+    try { localStorage.setItem(BASLA_KEY, b.dataset.k); } catch { /* yok say */ }
+    if ($('baslaSec')) baslaSecCiz();
+  }));
+}
+const INTRO = {
+  kalfa: { who: ['👴', 'Ustabaşı Hasan Usta', 'Lawo, mala tutmayı öğrendin, şimdi kendi binanı dik. Ama betona su kattırma, hakkımı helal etmem.'],
+    text: 'On beş yıl başkalarının şantiyesinde kalfalık yaptın. Birikmiş parayla küçük bir firma kurdun: 4 milyon lira, eski bir kamyonet ve seni seven ustalar. Tanınmıyorsun ama elin sağlam iş çıkarır.' },
+  aile: { who: ['👴', 'Rahmetli babanın sözü', 'Oğlum, bina dediğin içinde insan yaşayacak yerdir. Parayı kazanırsın, adını bir kere kaybedersen bulamazsın.'],
+    text: 'Babandan otuz yıllık bir tabela kaldı: tanınan bir isim, 13 milyon lira kasa… ve 7 milyon lira banka borcu. Babanın yaptığı eski binalar da hâlâ ayakta. Hepsi mi sağlam, bilmiyorsun.' },
+  damat: { who: ['🎩', 'Kayınpeder Zeki Bey', 'Abe damat, sen işini yap, belediyede ben varım. Kızımı üzme yeter.'],
+    text: 'Evlendiğinde kayınpederin sana firmanın kapısını açtı: 9 milyon lira ve belediyede tanıdık bir yüz. Yatırımcılar kimin damadı olduğunu biliyor. Senin kim olduğunu ise henüz bilmiyorlar.' },
+};
 function introCard() {
+  const I = E.BASLANGIC && INTRO[state.baslangic];
+  if (I) return {
+    kind: 'sys', phase: 'sistem', title: `${E.dateLabel(0)} — ${E.BASLANGIC[state.baslangic].ad}`, noStep: true,
+    speaker: { emoji: I.who[0], name: I.who[1], label: '', roleLabel: '', quote: I.who[2] },
+    text: I.text + ' Şehir büyüyor, eski evler yıkılıyor. Arsa sahipleriyle anlaş, yatırımcı bul, binanı dik, sat. Sözünü tutabilirsin… ya da tutmayabilirsin.',
+    ders: 'Bu oyundaki her senaryo, gerçek hayatta yaşanmış ya da haberlere yansımış bir yöntemden esinlenir. Her seçimden sonra, o yöntemin gerçek hayattaki karşılığını ve nasıl korunacağınızı göreceksiniz.',
+    choices: [{ label: 'Kolları sıva', fx: '', result: `Kartvizitlerin basıldı: "${state.firma} — Güvenin Adresi".` }],
+  };
   return {
     kind: 'sys', phase: 'sistem', title: `${E.dateLabel(0)} — Kariyerin Başlıyor`, noStep: true,
     speaker: { emoji: '👴', name: 'Rahmetli babanın sözü', label: '', roleLabel: '', quote: 'Oğlum, bina dediğin içinde insan yaşayacak yerdir. Parayı kazanırsın, adını bir kere kaybedersen bulamazsın.' },
@@ -408,6 +439,7 @@ function doChoose(i, mini) {
   $('resultBox').classList.remove('hidden');
   $('resultText').textContent = (mini.score != null ? `🎮 ${Math.round(mini.score * 100)}/100 — ` : '') + (res.gamble === true ? '🎲 TUTTU! ' : res.gamble === false ? '🎲 TUTMADI! ' : '') + res.result;
   $('deltas').innerHTML = deltaChips(res.deltas);
+  if (!state.ending) for (const r of ROZ.kontrol(state)) { (state.rozetler ||= []).push(r.id); toast(`${r.emoji} Rozet kazandın: ${r.ad}`, 'rozetT'); SFX.play('goal'); }
   $('events').innerHTML = res.events.filter((e) => e[0] !== 'faiz').map(eventLine).join('');
   $('ders').innerHTML = c.ders ? `💡 <b>Gerçek hayatta:</b> ${esc(c.ders)}` : '';
   $('ders').classList.toggle('hidden', !c.ders);
@@ -518,6 +550,24 @@ function onKey(e) {
 }
 
 // ---------- Sonlar ----------
+let sonRozetler = [];
+async function kartIndir() {
+  if (!state || !state.ending) return;
+  const btn = $('kartBtn'); btn.disabled = true;
+  try {
+    const blob = await sonKarti(state, { en: E.ENDINGS[state.ending], ahlak: E.ahlak(state), etiket: E.ahlakEtiket(E.ahlak(state)), unvan: E.unvan(state), rozetler: sonRozetler, net: E.fmt(E.netWorth(state)), vergi: E.fmt(state.vergi), tarih: E.dateLabel(state.t), basla: state.baslangic ? E.BASLANGIC[state.baslangic].ad : '' });
+    const ad = `muteahhit-${(state.firma || 'kariyer').toLowerCase().replace(/[^a-z0-9çğıöşü]+/gi, '-')}.png`;
+    const file = new File([blob], ad, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] }) && matchMedia('(pointer: coarse)').matches) {
+      await navigator.share({ files: [file], title: 'THE MÜTEAHHİT', text: 'Benim müteahhitlik kariyerim böyle bitti. Sen ne yapardın?' }).catch(() => {});
+    } else {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = ad;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+    toast('📸 Kariyer kartın hazır');
+  } catch (e) { console.warn(e); toast('Kart oluşturulamadı', 'bad'); }
+  btn.disabled = false;
+}
 const END_KEY = 'muteahhit-endings-v1';
 const readEndings = () => { try { return JSON.parse(localStorage.getItem(END_KEY) || '{}'); } catch { return {}; } };
 function saveEnding(k) { try { const e = readEndings(); e[k] = (e[k] || 0) + 1; localStorage.setItem(END_KEY, JSON.stringify(e)); } catch { /* yok say */ } }
@@ -525,6 +575,9 @@ function saveEnding(k) { try { const e = readEndings(); e[k] = (e[k] || 0) + 1; 
 function showEnding() {
   const s = state, k = s.ending, en = E.ENDINGS[k];
   saveEnding(k);
+  const gorulen = Object.keys(readEndings()).length;
+  sonRozetler = [...(s.rozetler || []).map((id) => ROZ.ROZETLER.find((r) => r.id === id)).filter(Boolean), ...ROZ.kontrol(s, k, gorulen)];
+  const oner = ROZ.oneri(s);
   const net = E.netWorth(s);
   const stats = [
     [E.dateLabel(s.t), 'Kariyerin sonu'], [s.completed, 'Tamamlanan proje'], [s.daireTeslim, 'Teslim edilen daire'],
@@ -544,6 +597,8 @@ function showEnding() {
   $('endingBody').innerHTML = `<div class="tone-${en.tone}"><p class="count">${esc(s.firma || '')} · ${E.unvan(s)}</p><h2>${en.title}</h2><p>${esc(en.text)}</p>${extra}
     <p class="count">Karnen: <b>${E.ahlakEtiket(a)}</b> (${a}/100)</p>
     ${yarim && (k === 'kacak' || k === 'iade' || k === 'iflas' || k === 'hapis') ? `<p><b>${yarim} proje yarım kaldı.</b> O binalarda oturmayı bekleyen aileler var.</p>` : ''}
+    ${sonRozetler.length ? `<div class="rozet-yeni"><p>🏅 Bu kariyerde kazandığın rozetler</p>${sonRozetler.map((r) => `<span class="rozet">${r.emoji} ${esc(r.ad)}</span>`).join('')}</div>` : ''}
+    <p class="bir-tur">Rozetler: <b>${Object.keys(ROZ.kazanilan()).length}/${ROZ.ROZETLER.length}</b> · Sonlar: <b>${gorulen}/${Object.keys(E.ENDINGS).length}</b>${oner ? `<br>Sıradaki rozet: ${oner.emoji} <b>${esc(oner.ad)}</b> — ${esc(oner.nasil)}` : ''}</p>
     <div class="stat-grid">${stats.map(([v, l]) => `<div><b>${v}</b><small>${l}</small></div>`).join('')}</div>
     <p class="disclaimer">Oyundaki her yöntemin gerçek hayattaki karşılığını ve nasıl korunacağınızı Farkındalık Rehberi'nde bulabilirsiniz.</p></div>`;
   $('ending').classList.remove('hidden');
@@ -572,6 +627,10 @@ function openModal(which) {
     h = `<h2>Farkındalık Rehberi</h2><p>Oyundaki çakallıklar ve gerçek hayatta nasıl korunacağınız. Bu bilgiler genel bilgilendirme amaçlıdır; somut durumlarda bir avukata danışın.</p>
     ${REHBER.map((r) => `<div class="rehber-item"><h3>${esc(r.t)}</h3><p>${esc(r.x)}</p><p class="korun">🛡️ ${esc(r.k)}</p></div>`).join('')}
     <h3>Kaynaklar</h3><ul>${KAYNAKLAR.map(([t, u]) => `<li><a href="${u}" target="_blank" rel="noopener">${esc(t)}</a></li>`).join('')}</ul>`;
+  } else if (which === 'rozetler') {
+    const k = ROZ.kazanilan();
+    h = `<h2>Rozetler (${Object.keys(k).length}/${ROZ.ROZETLER.length})</h2><p class="count">Rozetler bu tarayıcıda saklanır; her yeni kariyerde birikir.</p><div class="endings-grid">${ROZ.ROZETLER.map((r) =>
+      `<div class="end-card${k[r.id] ? '' : ' locked'}"><b>${k[r.id] ? r.emoji : '🔒'} ${esc(r.ad)}</b>${esc(r.nasil)}</div>`).join('')}</div>`;
   } else if (which === 'sonlar') {
     const got = readEndings();
     const n = Object.keys(E.ENDINGS).filter((k) => got[k]).length;

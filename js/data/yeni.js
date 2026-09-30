@@ -347,7 +347,7 @@ export const YENI_ARCS = [
       text: "Çınar Apartmanı yıkıldı. Hak sahipleri kirada. Kur yükseldi, maliyetler arttı; hesap tablosu artık %50 pay ile kâr bırakmıyor.",
       ders: "Maliyet artışlarında sözleşmeyi tek taraflı değiştirmek hukuken mümkün değildir. Taraflar ek protokolle ancak karşılıklı rızayla anlaşabilir.",
       choices: [
-        { label: "Sözünde dur, zararı üstlen", fx: "n-2 i+6 v+6", result: "Kârın bitti. Ama Sevim Hanım her hafta şantiyeye börek getiriyor." },
+        { label: "Sözünde dur, zararı üstlen", fx: "n-1.2 i+6 v+6", result: "Kârın bitti. Ama Sevim Hanım her hafta şantiyeye börek getiriyor." },
         { label: "Hak sahipleriyle açık konuş, küçük bir ek protokol öner", fx: "n-0.8 i+2 v+2", result: "Uzun bir toplantı. Sonunda ortada buluştunuz." },
         { label: "İnşaatı durdur, 'pay düşmezse devam etmem' de", fx: "n+1 v-10 m+4 r+3 F:dnRehin", result: "24 aile kirada, inşaat durdu. Artık pazarlık değil, rehine durumu." },
       ] }) : sys({
@@ -356,7 +356,7 @@ export const YENI_ARCS = [
       text: "İki genç aile dava açtı. Mahkeme bilirkişi atadı. Yaşlı hak sahiplerinden biri, 'bizi korkuttular' diye ifade verdi.",
       ders: "İrade fesadıyla (korkutma, aldatma) imzalatılan sözleşmeler iptal edilebilir. Hak sahipleri, baskı altında imza atmamalı; önce bağımsız bir avukata danışmalıdır.",
       choices: [
-        { label: "Sözleşmeyi herkes için %50'ye çıkar", fx: "n-2 r-4 v+8 m-2", result: "Dava geri çekildi. Yaşlılar da payını aldı." },
+        { label: "Sözleşmeyi herkes için %50'ye çıkar", fx: "n-1.4 r-4 v+8 m-2", result: "Dava geri çekildi. Yaşlılar da payını aldı." },
         { label: "Sadece dava açanlara daha fazla ver", fx: "n-0.8 v-4 m+2", result: "Yaşlılar sessizce öğrendi. Apartman ikiye bölündü." },
         { label: "Davayı sürdür, yılları geçsin", fx: "d+2 r+4 v-6 m+3 F:dnRehin", result: "Bina yıkık, dava sürüyor. Aileler kirada." },
       ] }) },
@@ -366,7 +366,7 @@ export const YENI_ARCS = [
       text: "Yıllarca kirada bekleyen Sevim Hanım'ın komşusu Rıza Amca, yeni evini göremeden öldü. Cenazede hak sahipleri pankart açtı.",
       ders: "Kentsel dönüşümde yarım kalan ya da uzayan projeler, en çok yaşlı hak sahiplerini vurur. Gecikmelerde hak sahipleri tahliye ve kira taleplerini mahkemeye taşıyabilir.",
       choices: [
-        { label: "Taziyeye git, binayı hemen bitirme sözü ver", fx: "n-2 v+8 i+2 m-3", result: "Sevim Hanım elini sıktı ama gözlerinin içine bakmadı." },
+        { label: "Taziyeye git, binayı hemen bitirme sözü ver", fx: "n-1.2 v+8 i+2 m-3", result: "Sevim Hanım elini sıktı ama gözlerinin içine bakmadı." },
         { label: "Açıklama yap: 'Gecikme hak sahiplerinden kaynaklı'", fx: "i-8 v-8 m+3", result: "Açıklama sosyal medyada yüz bin kez paylaşıldı. Hep yanlış sebeplerle." },
       ] }) : sys({
       banner: "DÖNÜŞÜM", title: "Çınar'a Dönüş",
@@ -405,7 +405,7 @@ export const YENI_ARCS = [
       text: "Düşük teklifle aldığın deprem konutlarında maliyet teklifin %40 üstünde. Hak sahipleri çadır kentte, konutlarını bekliyor.",
       ders: "Deprem bölgesine yapılan konutlarda kaliteden kısmak, aynı felaketi bir daha yaşatmak demektir. Kamu idaresi de teslim alırken beton ve donatı testlerini yaptırmakla yükümlüdür.",
       choices: [
-        { label: "Zararı üstlen, konutları doğru yap", fx: "n-4 i+8 v+8", result: "Kasa eridi. Ama çadırdaki aileler sağlam evlere girecek." },
+        { label: "Zararı üstlen, konutları doğru yap", fx: "n-2.2 i+8 v+8 g+3", result: "Kasa eridi. Ama çadırdaki aileler sağlam evlere girecek." },
         { label: "Demirden ve betondan kıs", fx: "n+1 v-15 r+6 m+4 F:ihKalite", result: "Konutlar yükseliyor. İnce demir, sulu beton." },
         { label: "İşi bırak, teminatını yak", fx: "n-2 i-6 g-6 m+3", result: "Yarım konutlar çadır kentin karşısında öylece duruyor." },
       ] }) : sys({

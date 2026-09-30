@@ -10,12 +10,13 @@ import { INSAAT_EK, YATIRIM_EK, ARSA_EK, SATIS_EK, CARK_EK } from './data/ek.js'
 import { NAMES, SEMTLER, PROJE_ADLARI, TWISTS } from './data/names.js';
 import { LUX } from './data/lux.js';
 import { speakerFor, sp as spk, dialectFor } from './data/dialect.js';
+import { BASLANGIC, BASLA_ARCS } from './data/basla.js';
 import { YENI_ARSA, YENI_YATIRIM, YENI_INSAAT, YENI_SATIS, YENI_TESLIM, YENI_GENEL, YENI_ARCS, REGION, kurSokuCard } from './data/yeni.js';
 import { ARCS as ESKI_ARCS, ghostCard, escapeCard, hesapCard, mirasCard, GOALS, LEGACY, DEST } from './data/hikaye.js';
 import * as SOS from './sosyal.js';
 import { betonCard, denetimCard, pazarlikCard, tapuCard as tapuMiniCard } from './data/mini.js';
-const ARCS = [...ESKI_ARCS, ...YENI_ARCS];
-export { LUX, GOALS, LEGACY, DEST, ARCS, REGION };
+const ARCS = [...ESKI_ARCS, ...YENI_ARCS, ...BASLA_ARCS];
+export { LUX, GOALS, LEGACY, DEST, ARCS, REGION, BASLANGIC };
 
 export const TEMPLATES = {
   arsa: [...ARSA, ...ARSA_EK, ...YENI_ARSA], yatirim: [...YATIRIM, ...YATIRIM_EK, ...YENI_YATIRIM], insaat: [...INSAAT, ...INSAAT_EK, ...YENI_INSAAT],
@@ -70,14 +71,17 @@ export const SCRIPTED = buildScripted();
 export const TOTAL_SCENARIOS = Object.values(POOL).reduce((a, l) => a + l.length, 0) + SCRIPTED.length;
 
 // ---------- Durum ----------
-export function newGame() {
-  return {
+export function newGame(kind) {
+  const s = {
     t: 0, n: 8, b: 0, i: 55, g: 50, e: 55, r: 5, v: 70, m: 0,
     vergi: 0, market: 1, projects: [], completed: 0, daireTeslim: 0, cokme: 0, olu: 0,
     flags: {}, recent: [], used: {}, seq: 1, queue: [], log: [], news: [], maxTier: 0,
     scriptedDone: {}, lastKacis: -99, lastWarn: -99, ending: null,
-    owned: {}, sins: [], arcs: {}, arcT: {}, arcsLast: 0, goals: {}, firma: "",
+    owned: {}, sins: [], arcs: {}, arcT: {}, arcsLast: 0, goals: {}, firma: "", dovizBorc: 0, baslangic: null,
   };
+  const B = BASLANGIC[kind];
+  if (B) { Object.assign(s, B.set); s.baslangic = kind; }
+  return s;
 }
 
 export const activeProjects = (s) => s.projects.filter((p) => !p.done && !p.collapsed);
@@ -117,7 +121,7 @@ export const canFlee = (s) => !s.ending && !s.escape && !s.finalStarted && (s.r 
 
 export function unvan(s) {
   const w = netWorth(s);
-  if (s.completed === 0) return "Kalfa Bozuntusu";
+  if (s.completed === 0) return { aile: "Babasının Oğlu", damat: "Torpilli Damat" }[s.baslangic] || "Kalfa Bozuntusu";
   if (w < 25) return "Mahalle Müteahhidi";
   if (w < 70) return "Semt Yapsatçısı";
   if (w < 160) return "İlçe Baronu";
@@ -141,7 +145,7 @@ export function createProject(s, tier, semt, ad) {
   if (used.has(name)) name = `${name} ${s.seq}`;
   const p = {
     id: s.seq++, name, semt: semt || pick(SEMTLER), tier, scale: T.scale, daire: T.daire, floors: T.floors,
-    phase: "arsa", step: 0, progress: 0, kalite: 65, pay: 50, onSatis: 0, satilan: 0, gecikme: 0, sahip: 60,
+    phase: "arsa", step: 0, progress: 0, kalite: s.baslangic === "kalfa" ? 73 : 65, pay: 50, onSatis: 0, satilan: 0, gecikme: 0, sahip: 60,
     yatirim: 0, flags: {}, slot: freeSlot(s), start: s.t, lastTurn: s.t, collapsed: false, hasar: false, done: false,
   };
   s.n -= T.fee;
@@ -584,7 +588,7 @@ function monthly(s, touched, events) {
     if (due.length) { const x = due[0]; s.sins = s.sins.filter((y) => y !== x); s.queue.push(ghostCard(s, x, hashStr(x.title + s.t))); }
   }
   s.market = clamp(s.market * (1 + (rnd() - 0.47) * 0.03), 0.5, 3);
-  s.r = Math.max(0, s.r - 0.7);
+  s.r = Math.max(0, s.r - (s.baslangic === "damat" && !s.flags.damatRed && s.t < at(2019, 4) ? 1.1 : 0.7));
   s.e += (55 - s.e) * 0.03;
   // Senaryolu olaylar (tarihe bağlı)
   for (const ev of SCRIPTED) {
@@ -599,7 +603,8 @@ function monthly(s, touched, events) {
   const ms = maxScale(s);
   if (netWorth(s) < -28 * ms && s.t - s.lastWarn > 8) { s.lastWarn = s.t; s.lastKacis = s.t; s.queue.push(tplCard(s, "kacis", pick(activeProjects(s)) || null)); }
   // Temiz sicilli firmaya bankanın uzattığı el (bir kez)
-  if (netWorth(s) < -14 * ms && !s.flags.kurtarma && ahlak(s) >= 55 && s.m < 8) { s.flags.kurtarma = true; s.queue.push(kurtarmaCard(s)); }
+  // (temiz sicilde 3 yılda bir tekrar gelebilir, en fazla 3 kez)
+  if (netWorth(s) < -14 * ms && (s.kurtarmaN || 0) < 3 && s.t - (s.kurtarmaT ?? -99) >= 36 && ahlak(s) >= 55 && s.m < 8) { s.flags.kurtarma = true; s.kurtarmaN = (s.kurtarmaN || 0) + 1; s.kurtarmaT = s.t; s.queue.push(kurtarmaCard(s)); }
   if (s.v <= 0 && !s.flags.vicdanUyari) { s.flags.vicdanUyari = true; s.queue.push(mirrorCard()); }
   if (s.e <= 4 && activeProjects(s).some((p) => p.phase === "insaat")) s.queue.push(strikeCard(s));
   SOS.monthly(s, sosFx, events);
@@ -795,7 +800,8 @@ export function checkEnding(s) {
   }
   if (s.escape) return null;
   if (s.r >= 100) return s.olu > 0 ? "deprem" : "hapis";
-  if (netWorth(s) < -40 * maxScale(s)) return "iflas";
+  // Temiz sicilli firmaya alacaklılar daha uzun süre tanır
+  if (netWorth(s) < -(ahlak(s) >= 70 && s.m < 8 ? 46 : 40) * maxScale(s)) return "iflas";
   if (s.i <= 0 && netWorth(s) < 150) return "kovuldun";
   if (s.g <= 0 && netWorth(s) < 150) return "yatirimci";
   if (s.finalStarted) return null;

@@ -36,7 +36,7 @@ function score(pol, ch, s, card) {
   return sc;
 }
 function play(pol) {
-  const s = E.newGame(); s.firma = 'Test';
+  const s = E.newGame(process.env.START); s.firma = 'Test';
   let card = E.drawCard(s), guard = 0;
   while (!s.ending && guard++ < 2000) {
     if (E.canStartProject(s) && s.n > 6 && Math.random() < 0.08) { s.queue.unshift(card); card = E.newProjectCard(s, false); }
