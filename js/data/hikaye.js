@@ -208,15 +208,20 @@ export const ARCS = [
 // ---------- Geçmişten gelen dosyalar (saatli bombalar) ----------
 const GHOSTS = [
   { who: sp("eski ustan", "karadeniz", "Eski usta", "Beni hatırladun mi patron? Ödemediğun hakedişler için avukata gittum. Her şeyi anlattum!", "👷"),
-    txt: "Yıllar önce hakkını yediğin usta, elindeki fotoğraflarla ortaya çıktı: kesilen kolonlar, eksik demir, sahte irsaliyeler." },
+    txt: "Yıllar önce hakkını yediğin usta, elindeki fotoğraflarla ortaya çıktı: kesilen kolonlar, eksik demir, sahte irsaliyeler.",
+    ozel: { label: "Ustanın hakkını faiziyle öde, fotoğraflardaki binaya güçlendirme yaptır", fx: "n-3 v+8 r-6 i+2 e+4", result: "Usta parayı saydı, sonra ağladı. 'Ben de o binada oturan çocukları düşünüyordum' dedi." } },
   { who: sp("araştırmacı gazeteci Pınar", "istanbul", "Basın", "Belgeler elimde. Yarın sabah yayındayız. Açıklama yapmak ister misiniz?", "🎤"),
-    txt: "Bir gazeteci, yıllar önceki bir kararının bütün belgelerine ulaştı." },
+    txt: "Bir gazeteci, yıllar önceki bir kararının bütün belgelerine ulaştı.",
+    ozel: { label: "Röportaj ver: hatanı kabul et, ne yapacağını anlat", fx: "i-3 v+7 r-4", result: "Haber yine çıktı, ama başlığı 'Müteahhit ilk kez konuştu' oldu. Yorumların yarısı sana kızgın, yarısı şaşkın." } },
   { who: sp("eski alıcın", "dogu", "Alıcı", "Bıra, beş yıldır bekliyorum! Avukatım dosyayı savcılığa verdi, sen de gör bakalım!", "👨‍👩‍👧"),
-    txt: "Yıllar önce kandırdığın bir alıcı, bu sefer yanında avukat ve bilirkişi raporuyla geldi." },
+    txt: "Yıllar önce kandırdığın bir alıcı, bu sefer yanında avukat ve bilirkişi raporuyla geldi.",
+    ozel: { label: "Arabulucuya git, bilirkişinin bulduğu zararı öde", fx: "n-2 r-7 v+6 m-1", result: "Arabuluculuk tutanağı imzalandı. Alıcı dosyayı çekti, ama selamını da kesti." } },
   { who: sp("vergi müfettişi", "ankara", "Müfettiş", "Yav kardeşim, dosyanız masama geldi. Eski yıllara da bakacağız, haberiniz olsun.", "🧾"),
-    txt: "Maliye, yıllar önceki bir işini yeniden incelemeye aldı. Zamanaşımı henüz dolmamış." },
+    txt: "Maliye, yıllar önceki bir işini yeniden incelemeye aldı. Zamanaşımı henüz dolmamış.",
+    ozel: { label: "Müfettiş gelmeden pişmanlıkla beyan ver, vergiyi faiziyle öde", fx: "n-2.5 r-9 v+5", result: "Pişmanlık zammıyla ödedin. Ceza yerine faiz ödemek, bu dosyada en ucuz yoldu." } },
   { who: sp("eski muhasebecin", "ege", "Eski muhasebeci", "Ne güzel işler yaptık beraber, di mi gari? Ben de sustum yıllarca. Şimdi biraz yardıma ihtiyacım var…", "📒"),
-    txt: "İşten çıkardığın muhasebeci, bütün kayıtların bir kopyasını saklamış. Şantaj mı, ihbar mı, henüz belli değil." },
+    txt: "İşten çıkardığın muhasebeci, bütün kayıtların bir kopyasını saklamış. Şantaj mı, ihbar mı, henüz belli değil.",
+    ozel: { label: "Şantajı kayda al, avukatınla birlikte savcılığa kendin git", fx: "r-5 v+6 i-2", act: { type: "gamble", p: 0.6, win: "r-6", lose: "r+8", winText: "Şantaj ayrı bir dosya oldu; senin eski işin etkin pişmanlıkla hafifledi.", loseText: "Savcı iki dosyayı birleştirdi. Kendi gelmen cezanı hafifletecek, ama yargılanacaksın." }, result: "" } },
 ];
 
 export function ghostCard(s, sin, seed) {
@@ -230,7 +235,7 @@ export function ghostCard(s, sin, seed) {
       { label: "Sus payı ver 🎲", fx: "n-1", act: { type: "gamble", p: 0.55, win: "", lose: "r+14 i-8", winText: "Para alındı, dosya kapandı. Şimdilik.", loseText: "Parayı aldı… ve yine de konuştu. Bir de rüşvet teklifi eklendi." }, result: "" },
       { label: "Avukat ordusu tut", fx: "n-2 r-3", result: "Dosya uzadıkça uzuyor." },
       { label: "Her şeyi inkâr et 🎲", fx: "", act: { type: "gamble", p: 0.4, win: "i-2", lose: "r+20 i-12 m+2", winText: "Belgeler yetersiz bulundu.", loseText: "Belgeler ortaya çıktı. İnkârın da haber oldu." }, result: "" },
-      { label: "Mağduru bul, zararını öde, özür dile", fx: "n-2.5 v+10 r-8 i+3 m-1", result: "Karşındaki şaşırdı. Sonra elini sıktı." },
+      g.ozel || { label: "Mağduru bul, zararını öde, özür dile", fx: "n-2.5 v+10 r-8 i+3 m-1", result: "Karşındaki şaşırdı. Sonra elini sıktı." },
     ],
   });
 }
