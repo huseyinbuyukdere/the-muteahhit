@@ -10,6 +10,7 @@ import { INSAAT_EK, YATIRIM_EK, ARSA_EK, SATIS_EK, CARK_EK } from './data/ek.js'
 import { NAMES, SEMTLER, PROJE_ADLARI, TWISTS } from './data/names.js';
 import { LUX } from './data/lux.js';
 import { speakerFor, sp as spk, dialectFor } from './data/dialect.js';
+import { ARSA_OZ, ARSA_KIM } from './data/arsaoz.js';
 import { BASLANGIC, BASLA_ARCS } from './data/basla.js';
 import { YENI_ARSA, YENI_YATIRIM, YENI_INSAAT, YENI_SATIS, YENI_TESLIM, YENI_GENEL, YENI_ARCS, REGION, kurSokuCard } from './data/yeni.js';
 import { ARCS as ESKI_ARCS, ghostCard, escapeCard, hesapCard, mirasCard, GOALS, LEGACY, DEST } from './data/hikaye.js';
@@ -208,25 +209,33 @@ function tplCard(s, ph, proj) {
 
 export function newProjectCard(s, forced) {
   const tiers = unlockedTiers(s);
-  const choices = tiers.slice(-3).reverse().map((tier) => {
+  const ozler = ARSA_OZ.slice().sort(() => rnd() - 0.5);
+  const secenek = tiers.slice(-3).reverse();
+  while (secenek.length < 3) secenek.push(secenek[secenek.length - 1]);
+  const choices = secenek.map((tier, i) => {
     const T = TIERS[tier];
-    const semt = pick(SEMTLER), ad = pick(PROJE_ADLARI);
+    const semt = pick(SEMTLER), ad = pick(PROJE_ADLARI), oz = ozler[i];
     return {
-      label: `${semt}'da ${T.ad} (${T.daire} daire) — ${fmt(T.fee)} ön masraf`,
-      act: { type: "newProject", tier, semt, ad },
-      result: `${semt}'da yeni bir ${T.ad.toLowerCase()} işi için arsa sahipleriyle görüşmeler başlıyor.`,
+      label: `${semt}'da ${T.ad} (${T.daire} daire) — ${fmt(T.fee)} ön masraf · ${oz.emoji} ${oz.ad}: ${oz.not}`,
+      act: { type: "newProject", tier, semt, ad, oz: oz.fx },
+      result: `${semt}'da yeni bir ${T.ad.toLowerCase()} işi için arsa sahipleriyle görüşmeler başlıyor. ${oz.emoji} ${oz.ad}: ${oz.not}.`,
     };
   });
   choices.push(forced
     ? { label: "Bir ay dinlen, piyasayı izle", fx: "v+2", result: "Bir ay boyunca hiçbir şey yapmadın. Faizler işlemeye devam etti." }
     : { label: "Şimdilik vazgeç", fx: "", result: "Eldeki işlere odaklanıyorsun.", act: { type: "cancel" } });
+  const riskli = ozler.slice(0, choices.length - 1).find((o) => o.ders);
+  const ders = riskli ? riskli.ders : "Müteahhitler aynı anda çok fazla projeye girdiğinde, bir projenin parası diğerine aktarılır; bu zincir koptuğunda yarım binalar ve mağdurlar ortaya çıkar.";
+  if (forced) {
+    const k = ARSA_KIM[(s.arsaN || 0) % ARSA_KIM.length];
+    s.arsaN = (s.arsaN || 0) + 1;
+    return { kind: "sys", phase: "sistem", title: k.t, speaker: k.sp(), text: `${k.x} Hangisine gireceksin?`, ders, choices };
+  }
   return {
-    kind: "sys", phase: "sistem", title: forced ? "Yeni Bir Arsa Lazım" : "Yeni Proje",
-    text: forced
-      ? "Elinde yürüyen iş yok. Mahallede kulağına birkaç müsait arsa fısıldandı. Hangisine gireceksin?"
-      : "Yeni bir işe girmek nakit getirir ama eldeki işleri yavaşlatır. Çok fazla işe girmek, çarkın bozulmasının ilk adımıdır.",
-    ders: "Müteahhitler aynı anda çok fazla projeye girdiğinde, bir projenin parası diğerine aktarılır; bu zincir koptuğunda yarım binalar ve mağdurlar ortaya çıkar.",
-    choices, noStep: !forced,
+    kind: "sys", phase: "sistem", title: "Yeni Proje",
+    text: "Yeni bir işe girmek nakit getirir ama eldeki işleri yavaşlatır. Çok fazla işe girmek, çarkın bozulmasının ilk adımıdır.",
+    ders: `Müteahhitler aynı anda çok fazla projeye girdiğinde, bir projenin parası diğerine aktarılır; bu zincir koptuğunda yarım binalar ve mağdurlar ortaya çıkar. ${riskli ? riskli.ders : ""}`.trim(),
+    choices, noStep: true,
   };
 }
 
@@ -338,7 +347,10 @@ export function resolve(s, card, idx, opts = {}) {
 
   if (card.kind === "tpl") { s.used[card.id] = true; s.recent.push(card.key); if (s.recent.length > 30) s.recent.shift(); }
   const act = ch.act || {};
-  if (act.type === "newProject") newProj = createProject(s, act.tier, act.semt, act.ad);
+  if (act.type === "newProject") {
+    newProj = createProject(s, act.tier, act.semt, act.ad);
+    if (act.oz) applyFx(s, act.oz, newProj, null, newProj.scale, deltas);
+  }
   if (act.type === "cancel") return { result: ch.result, deltas, events, ders: card.ders, noTime: true };
   if (act.type === "quakeFx") applyFx(s, ch.fx, null, null, maxScale(s), deltas);
   else applyFx(s, ch.fx, proj, card.twistM, scale, deltas);

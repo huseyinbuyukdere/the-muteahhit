@@ -24,7 +24,7 @@ function score(pol, ch, s, card) {
   if (f['E:kacak']) sc += pol === 'cakal' && s.r > 60 ? 30 : -40;
   const a = ch.act || {};
   if (a.type === 'gamble') sc += pol === 'cakal' ? 3 : -1;
-  if (a.type === 'newProject') sc += 5 + a.tier * (s.n > 20 ? 3 : -3);
+  if (a.type === 'newProject') { sc += 5 + a.tier * (s.n > 20 ? 3 : -3); for (const [k, v] of Object.entries(tok(a.oz))) if (w[k] != null) sc += w[k] * v * 0.5; }
   if (a.type === 'cancel') sc -= 3;
   if (a.type === 'esc') sc += (a.cash || 0) * (pol === 'cakal' ? 1 : 0) - (a.heat || 0) * 0.2 + (a.end ? 0 : 0);
   if (a.type === 'redeem') sc += pol === 'durust' ? 20 : -5;

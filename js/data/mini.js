@@ -5,11 +5,36 @@ import { sp, dialectFor } from './dialect.js';
 const AS_ADLARI = ["Hacı Rıza Amca", "Fatma Teyze", "emekli öğretmen Nuri Bey", "Kemal Usta", "Nazmiye Hanım", "Yusuf Ağa", "Müzeyyen Hanım", "Ramazan Amca"];
 const pickSeed = (a, n) => a[Math.abs(n) % a.length];
 
+const BETON_KIM = [
+  () => sp("şantiye şefi Rıfat", "karadeniz", "US", "Mikser kapıda, pompa hazır. Uşağum, su oranını sen ayarla; şoför de 'su katayım mı' deyi duruyor.", "👷"),
+  () => sp("şantiye şefi Serkan", "istanbul", "US", "Abi pompacı acele ediyor, öğlene başka şantiyesi varmış. Şoför de hortumu miksere uzattı bile.", "👷"),
+  () => sp("Mehmet Ali Usta", "dogu", "US", "Bıra, beton katı gelmiş, pompa zorlanıyor. Şoför 'iki kova su katarım, yağ gibi akar' diyor.", "👷"),
+  () => sp("kalıpçı Nihat Usta", "ege", "US", "Gari bu beton ağır akıyo. Şoför 'biraz su verek' diyo, ben karışmam, sen bilin.", "👷"),
+];
+const BETON_X = [
+  "Hazır beton şoförü akıcı olsun diye mikserin içine gizlice su katmaya meraklı.",
+  "Pompa operatörü acele ediyor; mikserler sırada bekliyor, şoför hortumu suya bağlamış.",
+  "Hava sıcak, beton çabuk katılaşıyor. Herkes 'biraz su' diyor; kimse numune kabına bakmıyor.",
+];
+const DENETIM = [
+  { sp: () => sp("bekçi Hüsnü", "ic", "US", "Beyim! Aşağıdan beyaz bir araba geliyo, üstünde 'Çalışma ve Sosyal Güvenlik' yazıyo. Yirmi dakkaya burdalar!", "🚨"),
+    x: (p) => `${p.name} şantiyesine habersiz iş güvenliği denetimi geliyor. Baretsiz işçiler, korumasız boşluklar, eksik iskele… Toparlamak için az vaktin var.` },
+  { sp: () => sp("formen Erol", "istanbul", "US", "Abi belediyeden yapı kontrol geliyor, telefonla haber verdiler. Kat boşlukları açık, iskele yarım!", "🚨"),
+    x: (p) => `Belediyenin yapı kontrol ekibi ${p.name}'a geliyor. Şikâyet varmış: 'şantiyeden sokağa malzeme düşüyor'. Toparlamak için az vaktin var.` },
+  { sp: () => sp("İSG uzmanı Derya Hanım", "ege", "ME", "Size kaç kere söyledim gari: kemer, korkuluk, filet. Müfettiş kapıda, ben de sorumluyum!", "🦺"),
+    x: (p) => `${p.name}'a iş müfettişi geldi; önceki hafta başka bir şantiyede yaşanan düşme kazasından sonra bölgedeki bütün şantiyeler geziliyor.` },
+];
+const TAPU_KIM = [
+  { ad: "Cemil", e: "e", sp: () => sp("tapu takipçisi Cemil", "istanbul", "ME", "Abi sıra uzun, sistem yavaş. Yüz lira ver, seni öne alayım. Kimse bilmez.", "🧾") },
+  { ad: "Sadık", e: "a", sp: () => sp("arzuhalci Sadık", "ic", "ME", "Evladım, bu evrak işi zor. Bir ikramiye ver, içerideki tanıdık sırayı hallederi.", "🧾") },
+  { ad: "Tuncay", e: "a", sp: () => sp("'danışman' Tuncay", "ankara", "ME", "Yav kardeşim sen hiç yorulma. Şu kadar ver, randevuyu da harcı da ben hallederim.", "🧾") },
+];
+
 export function betonCard(s, p) {
   return {
     kind: "sys", phase: "insaat", projId: p.id, title: "Beton Dökümü",
-    speaker: sp("şantiye şefi Rıfat", "karadeniz", "US", "Mikser kapıda, pompa hazır. Uşağum, su oranını sen ayarla; şoför de 'su katayım mı' deyi duruyor.", "👷"),
-    text: `${p.name}'da ${Math.max(1, Math.round(p.progress / 15))}. kat döşemesi dökülecek. Hazır beton şoförü akıcı olsun diye mikserin içine gizlice su katmaya meraklı. Su fazla olursa beton kolay akar ama dayanımı düşer.`,
+    speaker: pickSeed(BETON_KIM, p.id)(),
+    text: `${p.name}'da ${Math.max(1, Math.round(p.progress / 15))}. kat döşemesi dökülecek. ${pickSeed(BETON_X, p.id + s.t)} Su fazla olursa beton kolay akar ama dayanımı düşer.`,
     ders: "Betona şantiyede su katmak, dökümü kolaylaştırır ama dayanımı ciddi biçimde düşürür; deprem sonrası incelemelerde en sık rastlanan kusurlardan biridir. Döküm sırasında yapı denetim gözetiminde numune alınır; alıcılar ve arsa sahipleri bu test raporlarını isteyebilir.",
     choices: [
       { label: "Mikserin başına geç, oranı kendin tut (mini oyun)", act: { type: "mini", game: "beton", tiers: [
@@ -23,10 +48,11 @@ export function betonCard(s, p) {
 }
 
 export function denetimCard(s, p) {
+  const d = pickSeed(DENETIM, p.id);
   return {
     kind: "sys", phase: "insaat", projId: p.id, title: "Müfettiş Yolda",
-    speaker: sp("bekçi Hüsnü", "ic", "US", "Beyim! Aşağıdan beyaz bir araba geliyo, üstünde 'Çalışma ve Sosyal Güvenlik' yazıyo. Yirmi dakkaya burdalar!", "🚨"),
-    text: `${p.name} şantiyesine habersiz iş güvenliği denetimi geliyor. Baretsiz işçiler, korumasız boşluklar, eksik iskele… Toparlamak için az vaktin var.`,
+    speaker: d.sp(),
+    text: d.x(p),
     ders: "İş sağlığı ve güvenliği denetimleri habersiz yapılabilir; inşaat, iş kazalarının en sık yaşandığı sektörlerdendir. Çalışanlar güvensiz durumu ALO 170'e bildirebilir. Denetimden önce 'göstermelik düzen' kurmak, kazayı sadece erteler: iskele, korkuluk ve kemer her gün gerekir.",
     choices: [
       { label: "Şantiyeyi koş koş toparla (mini oyun)", act: { type: "mini", game: "temizlik", tiers: [
@@ -72,17 +98,18 @@ export function pazarlikCard(s, p, seed) {
 }
 
 export function tapuCard(s, p) {
+  const tk = pickSeed(TAPU_KIM, p.id);
   return {
     kind: "sys", phase: "satis", projId: p.id, title: "Tapu Müdürlüğü",
-    speaker: sp("tapu takipçisi Cemil", "istanbul", "ME", "Abi sıra uzun, sistem yavaş. Yüz lira ver, seni öne alayım. Kimse bilmez.", "🧾"),
-    text: `${p.name} dairelerinin tapu devri için randevu günü. Sıra numarası elinde; eksik evrak getiren işlemini baştan yapıyor. Takipçi Cemil kapıda 'hızlandırma' teklif ediyor.`,
+    speaker: tk.sp(),
+    text: `${p.name} dairelerinin tapu devri için randevu günü. Sıra numarası elinde; eksik evrak getiren işlemini baştan yapıyor. ${tk.ad} kapıda 'hızlandırma' teklif ediyor.`,
     ders: "Tapu işlemleri e-Devlet ve Web Tapu üzerinden randevuyla yapılır; kimlik, son 6 ayda çekilmiş fotoğraf, geçerli DASK poliçesi ve belediyeden emlak vergisi değer yazısı istenir. Harçlar resmi hesaba yatırılır. 'Sıra atlatan', 'işi hızlandıran' aracılara para vermek hem dolandırılma riski taşır hem de suçtur.",
     choices: [
       { label: "Evrakları kendin topla, sıranı bekle (mini oyun)", act: { type: "mini", game: "tapu", tiers: [
         [0.75, "i+2 s+2", "Evrak eksiksiz, işlem 10 dakikada bitti. Alıcılar 'bu kadar düzgün müteahhit görmedik' dedi."],
         [0.4, "d+0 i+0", "Bir evrak eksik çıktı, koşturup tamamladın. Akşam oldu ama bitti."],
         [0, "d+1 i-2", "Evrak eksik, sıran geçti. Alıcılar bir ay daha bekleyecek."]] }, result: "" },
-      { label: "Cemil'e para ver, sırayı atla", fx: "n-0.05 v-3 r+2", result: "Sıra atladın. Arkadaki yaşlı teyze seni gördü, telefonunu çıkardı." },
+      { label: `${tk.ad}'${tk.e} para ver, sırayı atla`, fx: "n-0.05 v-3 r+2", result: "Sıra atladın. Arkadaki yaşlı teyze seni gördü, telefonunu çıkardı." },
       { label: "Tapuda bedeli düşük göster, harçtan kıs", fx: "x+0.4 v-5 r+3 F:tapuDusuk", result: "Harç az çıktı. Alıcı ileride evi satarken ya da bir anlaşmazlıkta zararı görecek." },
     ],
   };
