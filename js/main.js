@@ -402,7 +402,7 @@ function showCard(c) {
     const isMini = ch.act?.type === 'mini' || ch.act?.mini;
     const risky = !isMini && (ch.act?.type === 'gamble' || (ch.act?.type === 'esc' && (ch.act.end || ch.act.risk)));
     const biter = /(^|\s)E:/.test(ch.fx || '') && !c.finalStage;
-    b.innerHTML = `<b>${i + 1}.</b> ${isMini ? '🎮 ' : ''}${esc(ek(ch.label))}${risky && !/🎲/.test(ch.label) ? ' 🎲' : ''}${biter ? ' <span class="biter">🏁 kariyerin biter</span>' : ''}`;
+    b.innerHTML = `<b>${i + 1}.</b> ${isMini ? '🎮 ' : ''}${etiket(ek(ch.label))}${risky && !/🎲/.test(ch.label) ? ' 🎲' : ''}${biter ? ' <span class="biter">🏁 kariyerin biter</span>' : ''}`;
     if (risky) b.classList.add('risky');
     if (isMini) b.classList.add('minich');
     b.onclick = () => choose(i);
@@ -495,6 +495,12 @@ function doChoose(i, mini) {
   if (state.ending) E.clearSave(); else E.save(state);
 }
 
+// Uzun seçenek: " · " sonrası küçük satıra iner
+function etiket(l) {
+  const i = l.indexOf(' · ');
+  return i < 0 ? esc(l) : `${esc(l.slice(0, i))}<span class="hint">${esc(l.slice(i + 3))}</span>`;
+}
+
 // Gerçek hayatta notu: kötü bir yola saptıysan kısa hali açık gelir, yoksa tıklayınca açılır (az yazı)
 function dersHtml(ders, deltas) {
   if (!ders) return '';
@@ -521,6 +527,9 @@ function damga(res, mini) {
   if (!t) return;
   el.textContent = t; void el.offsetWidth;
   el.className = `damga ${cls}`;
+  // Ekran kenarında kısa bir renk parlaması
+  const f = $('parilti');
+  if (f && cls !== 'sari') { f.className = ''; void f.offsetWidth; f.className = cls; }
 }
 
 function deltaChips(deltas) {

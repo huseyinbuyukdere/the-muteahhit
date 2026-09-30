@@ -216,7 +216,7 @@ export function newProjectCard(s, forced) {
     const T = TIERS[tier];
     const semt = pick(SEMTLER), ad = pick(PROJE_ADLARI), oz = ozler[i];
     return {
-      label: `${semt}'da ${T.ad} (${T.daire} daire) — ${fmt(T.fee)} ön masraf · ${oz.emoji} ${oz.ad}: ${oz.not}`,
+      label: `${oz.emoji} ${semt}'da ${T.ad} (${T.daire} daire), ${fmt(T.fee)} · ${oz.ad}: ${oz.not}`,
       act: { type: "newProject", tier, semt, ad, oz: oz.fx },
       result: `${semt}'da yeni bir ${T.ad.toLowerCase()} işi için arsa sahipleriyle görüşmeler başlıyor. ${oz.emoji} ${oz.ad}: ${oz.not}.`,
     };
