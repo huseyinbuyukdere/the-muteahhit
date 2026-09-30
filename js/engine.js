@@ -274,12 +274,15 @@ export function drawCard(s) {
 // Her projede bir kez: beton dökümü, habersiz denetim, arsa pazarlığı, tapu günü (mini oyunlu)
 function miniFor(s, p) {
   const f = p.flags;
-  let c = null;
-  if (p.phase === "arsa" && !f.miniPazarlik && rnd() < 0.5) { f.miniPazarlik = true; c = pazarlikCard(s, p, p.id * 7 + s.t); }
-  else if (p.phase === "insaat" && p.progress >= 15 && !f.miniBeton && rnd() < 0.5) { f.miniBeton = true; c = betonCard(s, p); }
-  else if (p.phase === "insaat" && p.progress >= 45 && !f.miniDenetim && rnd() < 0.4) { f.miniDenetim = true; c = denetimCard(s, p); }
-  else if (p.phase === "satis" && !f.miniTapu && rnd() < 0.4) { f.miniTapu = true; c = tapuMiniCard(s, p); }
-  if (c) c.scale = p.scale;
+  // Aynı mini oyun her projede gelmesin: oynadıkça seyrekleşir (ilk 2'de tam, sonra yarı, 5'ten sonra dörtte bir)
+  const mn = (s.miniN = s.miniN || {});
+  const w = (k) => ((mn[k] || 0) < 2 ? 1 : (mn[k] || 0) < 5 ? 0.5 : 0.25);
+  let c = null, k = null;
+  if (p.phase === "arsa" && !f.miniPazarlik && rnd() < 0.5) { f.miniPazarlik = true; if (rnd() < w(k = "pazarlik")) c = pazarlikCard(s, p, p.id * 7 + s.t); }
+  else if (p.phase === "insaat" && p.progress >= 15 && !f.miniBeton && rnd() < 0.5) { f.miniBeton = true; if (rnd() < w(k = "beton")) c = betonCard(s, p); }
+  else if (p.phase === "insaat" && p.progress >= 45 && !f.miniDenetim && rnd() < 0.4) { f.miniDenetim = true; if (rnd() < w(k = "denetim")) c = denetimCard(s, p); }
+  else if (p.phase === "satis" && !f.miniTapu && rnd() < 0.4) { f.miniTapu = true; if (rnd() < w(k = "tapu")) c = tapuMiniCard(s, p); }
+  if (c) { c.scale = p.scale; mn[k] = (mn[k] || 0) + 1; }
   return c;
 }
 
