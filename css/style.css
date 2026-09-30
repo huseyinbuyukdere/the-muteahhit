@@ -443,3 +443,6 @@ body.cine::before, body.cine::after { height: 7vh; }
 .bir-tur { font-size: 14px; color: var(--muted); line-height: 1.6; }
 .bir-tur b { color: var(--text); }
 .toast.rozetT { background: #3a2f07; border-color: var(--yellow); color: var(--yellow); }
+
+/* Kariyeri bitiren seçenek uyarısı */
+#choices .biter { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 10px; font-size: 0.78em; background: rgba(244,194,13,0.16); color: #f4c20d; white-space: nowrap; }

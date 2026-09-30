@@ -396,7 +396,8 @@ function showCard(c) {
     const b = document.createElement('button');
     const isMini = ch.act?.type === 'mini' || ch.act?.mini;
     const risky = !isMini && (ch.act?.type === 'gamble' || (ch.act?.type === 'esc' && (ch.act.end || ch.act.risk)));
-    b.innerHTML = `<b>${i + 1}.</b> ${isMini ? '🎮 ' : ''}${esc(ch.label)}${risky && !/🎲/.test(ch.label) ? ' 🎲' : ''}`;
+    const biter = /(^|\s)E:/.test(ch.fx || '') && !c.finalStage;
+    b.innerHTML = `<b>${i + 1}.</b> ${isMini ? '🎮 ' : ''}${esc(ch.label)}${risky && !/🎲/.test(ch.label) ? ' 🎲' : ''}${biter ? ' <span class="biter">🏁 kariyerin biter</span>' : ''}`;
     if (risky) b.classList.add('risky');
     if (isMini) b.classList.add('minich');
     b.onclick = () => choose(i);
