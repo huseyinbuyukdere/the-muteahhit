@@ -17,10 +17,11 @@
   - Denetim oyununda tehlikenin adı karenin altında yazıyor ("Baret yok" gibi).
   - Havalimanında nabız 300'e çıkmıyor, polisin sorusunda doğru cevap hep ilk sırada değil.
   - "Sıradaki rozet" önerisi her oyunda değişiyor.
+  - Siyaset daveti artık oyunun ilk aylarında gelip kariyeri bitirmiyor; en erken 3. yılda ve bir bina teslim ettikten sonra geliyor.
   - Havalimanında polisin, tapuda memurun da çizim yüzü var; yanlışta kızıyorlar.
 
 ## Denge (Gece 2)
-- Kurallar değişmedi. Dürüst oyuncunun iflas oranı %9–15 arasında, çoğunlukla saygın patron oluyor.
+- Tek kural değişikliği: siyaset daveti geç geliyor. Dürüst oyuncunun iflas oranı %9–15 arasında, çoğunlukla saygın patron oluyor.
 - Dolandırıcının yaklaşık yarısı kaçıyor, kalanlar yakalanıyor, kovuluyor ya da siyasete giriyor. Her zaman kazanmıyor. Kaçan da arkasında yüzlerce mağdur bırakıyor ve bu son ekranında görünüyor.
 
 ## Yarım kalanlar

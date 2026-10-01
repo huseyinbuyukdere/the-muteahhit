@@ -45,12 +45,13 @@ export default [
     ["Ödülü satın al, reklamlarda kullan", "n-0.5 i+6 v-3", "Ofisin duvarında parlıyor."],
     ["Parayı mahalle okuluna bağışla", "n-0.5 i+8 v+5", "Okul yeni kütüphanesini senin adınla açtı."]),
 
-  S("Siyasete Davet",
+  // Kariyeri bitiren davet: en erken 3. yılda ve en az bir proje teslim edildiyse
+  Q("T:36&C:1", S("Siyasete Davet",
     "Bir parti seni belediye meclisi adayı yapmak istiyor. 'İmar komisyonunda senin gibi birine ihtiyaç var.'",
     "İmar yetkisine sahip kurullarda sektörden kişilerin bulunması ciddi çıkar çatışması doğurur.",
     ["Reddet", "", "İnşaata devam."],
     ["Kabul et", "E:siyaset", "Seçim afişlerinde yüzün var."],
-    ["Kendin girme, birini destekle", "n-1 r+3 i+2", "Adayın kazandı. Sana borçlu."]),
+    ["Kendin girme, birini destekle", "n-1 r+3 i+2", "Adayın kazandı. Sana borçlu."])),
 
   S("Gazeteci Soruyor",
     "{GZ}, senin eski bir projenle ilgili soru soruyor: 'Beton testleri neden hiç yayınlanmadı?'",

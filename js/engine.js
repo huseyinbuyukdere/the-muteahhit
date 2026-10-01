@@ -167,6 +167,8 @@ function qOk(s, q, proj) {
   if (q.startsWith("R:")) return !!(proj && REGION[proj.semt] === q.slice(2));
   if (q.startsWith("Y:")) { const [a, b] = q.slice(2).split("-").map(Number); const y = yearOf(s.t); return y >= a && y <= (b || a); }
   if (q.startsWith("F:")) return !!s.flags[q.slice(2)];
+  if (q.startsWith("T:")) return s.t >= +q.slice(2); // en erken ay
+  if (q.startsWith("C:")) return (s.completed || 0) >= +q.slice(2); // en az teslim edilen proje
   if (q.startsWith("P:")) return !!(proj && proj.flags[q.slice(2)]);
   if (q === "onsatis") return !!(proj && proj.onSatis > 0);
   if (q === "nosatis") return !!(proj && proj.onSatis === 0 && proj.phase === "insaat");
