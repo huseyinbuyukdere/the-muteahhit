@@ -18,7 +18,7 @@ import * as GZ from './gazete.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-let state = null, card = null, mode = 'choose', sceneOk = false, bekleyenManset = null;
+let state = null, card = null, mode = 'choose', sceneOk = false, bekleyenManset = null, sonOdak = null;
 
 const STATS = [
   ['i', 'İtibar', '#46a758', false], ['g', 'Yatırımcı', '#3e8ed0', false], ['e', 'Ekip', '#f4c20d', false],
@@ -66,6 +66,9 @@ function boot() {
   $('kacBtn').onclick = askFlee;
   $('sideToggle').onclick = () => $('side').classList.toggle('closed');
   if (window.innerWidth <= 860) $('side').classList.add('closed');
+  // Ekran daralınca (telefonu çevirme, pencere küçültme) panel kartın üstünde açık kalmasın
+  matchMedia('(max-width: 860px)').addEventListener?.('change', (e) => { if (e.matches) $('side').classList.add('closed'); });
+  window.addEventListener('resize', () => { clearTimeout(sahneAlani._t); sahneAlani._t = setTimeout(sahneAlani, 150); });
   document.querySelectorAll('.side-tabs button').forEach((b) => (b.onclick = () => {
     document.querySelectorAll('.side-tabs button').forEach((x) => x.classList.toggle('active', x === b));
     for (const t of ['projeler', 'hayat', 'gunluk']) $(t).classList.toggle('hidden', b.dataset.tab !== t);
@@ -377,6 +380,16 @@ function floatMoney(v) {
   setTimeout(() => d.remove(), 1800);
 }
 
+// Telefonda sahnenin görünen kısmı: üst bilgi çubuklarının altı ile kartın üstü arası
+function sahneAlani() {
+  if (!sceneOk || window.innerWidth > 860) return;
+  setTimeout(() => {
+    const ust = Math.max(...['hud', 'ahlak', 'sideToggle'].map((id) => { const r = $(id)?.getBoundingClientRect(); return r && r.height ? r.bottom : 0; }));
+    const k = $('card').getBoundingClientRect();
+    S3.bosAlan(ust, k.top);
+  }, 30);
+}
+
 function showCard(c) {
   card = c; mode = 'choose';
   if ($('damga')) $('damga').className = 'damga hidden';
@@ -386,6 +399,9 @@ function showCard(c) {
   $('cardPhase').textContent = E.PHASE_LABEL[c.phase] || c.phase;
   $('cardPhase').className = `tag ${c.phase}`;
   $('cardProj').textContent = proj ? `${proj.name} · ${proj.semt}` : E.dateLabel(state.t);
+  sahneAlani();
+  // Kart başka bir binayla ilgiliyse kamera o binaya döner (boş sokak yerine)
+  if (sceneOk && proj && !proj.collapsed && proj.slot >= 0 && proj.id !== sonOdak) { sonOdak = proj.id; S3.focus(proj); }
   $('cardTitle').textContent = ek(c.title);
   const ban = c.banner || BANNER[c.phase];
   $('cardBanner').textContent = ban ? `🔴 ${ban}` : '';
@@ -511,6 +527,7 @@ function doChoose(i, mini) {
   delete state.lastQuake;
   render();
   for (const [k] of STATS) if (Math.round(before[k]) !== Math.round(state[k])) { const el = $(`st-${k}`); if (el) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); } }
+  sahneAlani();
   if (state.ending) E.clearSave(); else E.save(state);
 }
 

@@ -112,7 +112,26 @@ function resize() {
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   // Kart ekranın altını kapatır: sahnenin merkezini yukarı kaydır ki odaklanan bina kartın üstünde görünsün
-  camera.setViewOffset(w, h, 0, h * (w <= 860 && h > w ? 0.17 : 0.15), w, h);
+  if (w > 860) ofsHedef = null;
+  if (ofsHedef == null || ofsY == null) ofsY = h * 0.15;
+  camera.setViewOffset(w, h, 0, ofsY, w, h);
+  camera.updateProjectionMatrix();
+}
+
+// Arayüzün sahneye bıraktığı boş dikey aralık (ekran pikseli): odak noktası bu aralığa oturur
+let ofsY = null, ofsHedef = null;
+export function bosAlan(ust, alt) {
+  if (!renderer || !(alt - ust > 40)) return;
+  const h = renderer.domElement.clientHeight || window.innerHeight;
+  // Bina yukarı doğru uzandığı için zemin noktasını aralığın biraz altına koy
+  ofsHedef = Math.max(0, Math.min(h * 0.3, h / 2 - (ust + (alt - ust) * 0.66)));
+  if (ofsY == null) ofsY = ofsHedef;
+}
+function tickOfs(dt) {
+  if (ofsHedef == null || Math.abs(ofsY - ofsHedef) < 0.5) return;
+  ofsY += (ofsHedef - ofsY) * (1 - Math.exp(-dt * 4));
+  const el = renderer.domElement, w = el.clientWidth || window.innerWidth, h = el.clientHeight || window.innerHeight;
+  camera.setViewOffset(w, h, 0, ofsY, w, h);
   camera.updateProjectionMatrix();
 }
 
@@ -986,7 +1005,7 @@ function tick() {
     c.rotation.y += dt * 0.25;
     const u = c.userData; if (u && u.cable) { const k = 0.55 + 0.45 * Math.sin(t * 0.45 + u.ph); u.cable.scale.y = k; u.cable.position.y = -2 * k; u.load.position.y = -4 * k - 0.2; }
   }
-  tickWeather(dt, t); tickGrow(dt); tickMixers(dt); tickPerf(dt);
+  tickWeather(dt, t); tickGrow(dt); tickMixers(dt); tickPerf(dt); tickOfs(dt);
   for (const mv of movers) if (mv.o.userData.spin) mv.o.userData.spin.rotation.z += dt * 3;
   for (const c of cars) {
     const u = c.userData, k = u.vertical ? 'z' : 'x';
@@ -1149,4 +1168,4 @@ function tickTepki(dt, t) {
   }
 }
 // Test yardımcısı: kamera durumu
-export function _cam() { return { cam: camera.position.toArray().map(Math.round), tgt: controls.target.toArray().map(Math.round), ft: focusTarget && focusTarget.toArray(), cine: !!cine, ar: controls.autoRotate }; }
+export function _cam() { return { ofsY, ofsHedef, cam: camera.position.toArray().map(Math.round), tgt: controls.target.toArray().map(Math.round), ft: focusTarget && focusTarget.toArray(), cine: !!cine, ar: controls.autoRotate }; }
