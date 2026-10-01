@@ -356,6 +356,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .site .cell.haz { border-color: #e5484d; background: #3a1f24; animation: pulse 1s infinite; }
 .site .cell.fixed { border-color: #46a758; background: #1f3a26; }
 .site .cell.wrong { background: #5a3a1a; }
+.site .cell small { display: block; height: 13px; margin-top: 2px; font-size: 10px; line-height: 13px; font-weight: 700; color: #ffb3b3; white-space: nowrap; overflow: hidden; }
+.site .cell.fixed small { color: #9be3a8; }
 .site .hint { margin-top: 8px; font-size: 13px; color: var(--muted); }
 .pz-man { display: flex; gap: 10px; align-items: center; }
 .pz-man > span { font-size: 46px; }

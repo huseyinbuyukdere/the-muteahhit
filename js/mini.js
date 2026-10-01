@@ -94,13 +94,15 @@ const GAMES = {
     title: 'Müfettiş Gelmeden Toparla',
     how: 'Tehlikeli durumlara (🟥 kırmızı çerçeveli) dokun ve düzelt. Sağlam şeylere dokunma, zaman kaybettirir.',
     start(el, ctx, finish) {
-      const H = [['🧑‍🔧', 'Baretsiz işçi', '👷'], ['🕳️', 'Korkuluksuz boşluk', '🚧'], ['🔌', 'Açık kablo', '🔒'], ['🧗', 'Kemersiz iskele', '🦺'], ['🔥', 'Yangın tüpü yok', '🧯'], ['🚬', 'Malzeme yanında sigara', '🚭'], ['🪜', 'Kırık merdiven', '🪜']];
+      const H = [['🧑‍🔧', 'Baretsiz işçi', '👷', 'Baret yok'], ['🕳️', 'Korkuluksuz boşluk', '🚧', 'Korkuluk yok'], ['🔌', 'Açık kablo', '🔒', 'Açık kablo'], ['🧗', 'Kemersiz iskele', '🦺', 'Kemer yok'], ['🔥', 'Yangın tüpü yok', '🧯', 'Tüp yok'], ['🚬', 'Malzeme yanında sigara', '🚭', 'Sigara'], ['🪜', 'Kırık merdiven', '🪜', 'Kırık merdiven']];
+      // Kareye emoji + altına kısa ad (telefonda title görünmediği için)
+      const koy = (b, e, ad = '') => { b.innerHTML = `${e}<small>${ad}</small>`; };
       const OK = ['🧱', '🪵', '👷', '🏗️', '🚜', '🪣'];
       const N = 12;
       el.innerHTML = `<div class="site"><div class="car-track"><span id="tCar">🚗</span><span>🏗️</span></div><div class="grid" id="tGrid"></div><div class="hint" id="tHint">Düzeltilen: 0</div></div>`;
       const grid = $('tGrid');
       const cells = [];
-      for (let i = 0; i < N; i++) { const b = document.createElement('button'); b.className = 'cell'; b.textContent = OK[i % OK.length]; grid.appendChild(b); cells.push({ b, h: null }); }
+      for (let i = 0; i < N; i++) { const b = document.createElement('button'); b.className = 'cell'; koy(b, OK[i % OK.length]); grid.appendChild(b); cells.push({ b, h: null }); }
       let spawned = 0, fixed = 0, penalty = 0;
       const spawn = () => {
         const free = cells.filter((c) => !c.h);
@@ -108,13 +110,13 @@ const GAMES = {
         const c = free[Math.floor(Math.random() * free.length)];
         const h = H[Math.floor(Math.random() * H.length)];
         c.h = h; spawned++;
-        c.b.textContent = h[0]; c.b.title = h[1]; c.b.classList.add('haz');
+        koy(c.b, h[0], h[3]); c.b.title = h[1]; c.b.classList.add('haz');
       };
       cells.forEach((c) => (c.b.onclick = () => {
         if (c.h) {
-          fixed++; c.b.textContent = c.h[2]; c.b.classList.remove('haz'); c.b.classList.add('fixed'); sfx('click');
+          fixed++; koy(c.b, c.h[2], 'Düzeldi'); c.b.classList.remove('haz'); c.b.classList.add('fixed'); sfx('click');
           const h = c.h; c.h = null; $('tHint').textContent = `Düzeltilen: ${fixed} · son: ${h[1]} ✔`;
-          later(900, () => { c.b.classList.remove('fixed'); c.b.textContent = OK[Math.floor(Math.random() * OK.length)]; });
+          later(900, () => { c.b.classList.remove('fixed'); koy(c.b, OK[Math.floor(Math.random() * OK.length)]); });
         } else { penalty++; c.b.classList.add('wrong'); later(300, () => c.b.classList.remove('wrong')); }
       }));
       for (let i = 0; i < 3; i++) spawn();
