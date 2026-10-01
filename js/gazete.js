@@ -21,7 +21,9 @@ const SON = {
 };
 
 // Kötü sonların korunma notu (son ekranında da gösterilir)
-export const sonDers = (k) => SON[k]?.[3] || null;
+const IYI_DERS = 'Sağlam müteahhidi tanımak için eski binalarını gez, oturanlarla konuş; iskân belgesini ve yapı denetim raporunu sor.';
+export const sonIyi = (k) => SON[k]?.[2] === 'iyi';
+export const sonDers = (k) => SON[k]?.[3] || (SON[k] ? IYI_DERS : null);
 
 // Sonuçtan manşet çıkar; yoksa null
 export function manset(s, c, res) {

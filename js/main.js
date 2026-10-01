@@ -704,7 +704,7 @@ function showEnding() {
   $('endingBody').innerHTML = `<div class="tone-${en.tone}"><p class="count">${esc(s.firma || '')} · ${E.unvan(s)}</p><h2>${en.title}</h2><p>${esc(en.text)}</p>${extra}
     <p class="count">Karnen: <b>${E.ahlakEtiket(a)}</b> (${a}/100)</p>
     ${yarim && (k === 'kacak' || k === 'iade' || k === 'iflas' || k === 'hapis') ? `<p><b>${yarim} proje yarım kaldı.</b> O binalarda oturmayı bekleyen aileler var.</p>` : ''}
-    ${GZ.sonDers(k) ? `<p class="son-ders">⚠️ <b>Gerçek hayatta:</b> ${esc(GZ.sonDers(k))}</p>` : ''}
+    ${GZ.sonDers(k) ? `<p class="son-ders">${GZ.sonIyi(k) ? '💡' : '⚠️'} <b>Gerçek hayatta:</b> ${esc(GZ.sonDers(k))}</p>` : ''}
     ${sonRozetler.length ? `<div class="rozet-yeni"><p>🏅 Bu kariyerde kazandığın rozetler</p>${sonRozetler.map((r) => `<span class="rozet">${r.emoji} ${esc(r.ad)}</span>`).join('')}</div>` : ''}
     <p class="bir-tur">Rozetler: <b>${Object.keys(ROZ.kazanilan()).length}/${ROZ.ROZETLER.length}</b> · Sonlar: <b>${gorulen}/${Object.keys(E.ENDINGS).length}</b>${oner ? `<br>Sıradaki rozet: ${oner.emoji} <b>${esc(oner.ad)}</b> — ${esc(oner.nasil)}` : ''}</p>
     <div class="stat-grid">${kutu(stats)}</div>
