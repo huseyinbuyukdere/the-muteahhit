@@ -12,6 +12,7 @@ import * as ISCI from './data/isci.js';
 import { DIALECT_LABEL } from './data/dialect.js';
 import * as ROZ from './rozet.js';
 import { sonKarti } from './kart.js';
+import * as KAY from './kaydir.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -57,7 +58,8 @@ function boot() {
   $('modalClose').onclick = () => $('modal').classList.add('hidden');
   $('modal').onclick = (e) => { if (e.target.id === 'modal') $('modal').classList.add('hidden'); };
   $('menuBtn').onclick = () => { E.save(state); $('start').classList.remove('hidden'); $('devamKariyerBtn').classList.remove('hidden'); };
-  $('devamBtn').onclick = next;
+  $('devamBtn').onclick = () => { if (!KAY.yeniKaydirildi()) next(); };
+  KAY.kur($('card'), { mod: () => mode, sec: (i) => choose(i), devam: () => next() });
   $('yeniProjeBtn').onclick = askNewProject;
   $('kacBtn').onclick = askFlee;
   $('sideToggle').onclick = () => $('side').classList.toggle('closed');
@@ -405,9 +407,16 @@ function showCard(c) {
     b.innerHTML = `<b>${i + 1}.</b> ${isMini ? '🎮 ' : ''}${etiket(ek(ch.label))}${risky && !/🎲/.test(ch.label) ? ' 🎲' : ''}${biter ? ' <span class="biter">🏁 kariyerin biter</span>' : ''}`;
     if (risky) b.classList.add('risky');
     if (isMini) b.classList.add('minich');
-    b.onclick = () => choose(i);
+    b.onclick = () => { if (!KAY.yeniKaydirildi()) choose(i); };
     $('choices').appendChild(b);
   });
+  if (KAY.ipucuGoster() && c.choices.length > 1) {
+    const ip = document.createElement('div');
+    ip.className = 'kaydir-ipucu'; ip.textContent = '👆 Dokun ya da seçeneği yana kaydır';
+    $('choices').appendChild(ip);
+    const ilk = $('choices').firstElementChild;
+    setTimeout(() => { if (mode === 'choose') ilk.classList.add('durt'); }, 900);
+  }
   $('choices').classList.remove('hidden');
   $('resultBox').classList.add('hidden');
   $('card').scrollTop = 0;
@@ -668,7 +677,7 @@ function openModal(which) {
     <h3>Dolaptaki iskeletler</h3><p>Vicdansız kararların bazıları dosyaya girer (🗄️). Yıllar sonra bir gazeteci, eski bir usta ya da müfettiş kapını çalabilir.</p>
     <h3>Kaçış ve son perde</h3><p>Kaçmaya karar verirsen dört adımlı bir kaçış operasyonu başlar: parayı topla, sınırdan geçir, rota seç, pasaport kontrolünden geç. Zengin olursan son perdede hesap günü ve miras kararı seni bekler.</p>
     <h3>Deprem</h3><p>Yaptığın binalar yıllar sonra bir depremde sınanır. Kalite düşükse, bunun bedelini insanlar öder; oyun da bunu hatırlatır.</p>
-    <h3>Sonlar</h3><p>12 farklı son var: dürüst patron, dokunulmaz baron, kaçak, kırmızı bülten, cezaevi, iflas ve dahası. Kötü seçimler de kazanabilir. Kısayollar: 1-4 seçim, Enter devam.</p>`;
+    <h3>Sonlar</h3><p>12 farklı son var: dürüst patron, dokunulmaz baron, kaçak, kırmızı bülten, cezaevi, iflas ve dahası. Kötü seçimler de kazanabilir. Kısayollar: 1-4 seçim, Enter devam. Telefonda seçeneği yana kaydırarak seçebilir, sonucu yana atarak geçebilirsin.</p>`;
   } else if (which === 'rehber') {
     h = `<h2>Farkındalık Rehberi</h2><p>Oyundaki çakallıklar ve gerçek hayatta nasıl korunacağınız. Bu bilgiler genel bilgilendirme amaçlıdır; somut durumlarda bir avukata danışın.</p>
     ${REHBER.map((r) => `<div class="rehber-item"><h3>${esc(r.t)}</h3><p>${esc(r.x)}</p><p class="korun">🛡️ ${esc(r.k)}</p></div>`).join('')}
