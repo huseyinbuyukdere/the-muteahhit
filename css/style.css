@@ -542,3 +542,4 @@ body.cine::before, body.cine::after { height: 7vh; }
 .stat-diger .stat-grid { margin-top: 6px; }
 .nasil-liste { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 8px; }
 .nasil-liste li { background: var(--panel2); border-radius: 10px; padding: 9px 12px; line-height: 1.4; }
+.pz-man > .avatar.yuz { width: 64px; height: 64px; flex: 0 0 64px; font-size: 0; }

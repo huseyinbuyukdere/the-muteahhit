@@ -2,6 +2,7 @@
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+import { yuzKoy } from './yuz.js';
 let sfx = () => {};
 let timers = [];
 const every = (ms, f) => { const id = setInterval(f, ms); timers.push(id); return id; };
@@ -136,7 +137,7 @@ const GAMES = {
       const ask0 = ctx.ask || 54;
       let ask = ask0, tur = 0, sabir = 100;
       const res = ask0 - 6 - Math.floor(Math.random() * 6); // gizli razı olma sınırı
-      const nm = ctx.name || 'Arsa sahibi';
+      const nm0 = ctx.name || 'Arsa sahibi', nm = nm0.charAt(0).toLocaleUpperCase('tr-TR') + nm0.slice(1);
       const say = {
         karadeniz: ['Ula bu ne teklif!', 'Hade biraz daha yaklaş.', 'Tamam uşağum, olsun!'],
         dogu: ['Bıra bu olmaz!', 'Biraz daha, kardeşim.', 'Tamam, anlaştık wallah.'],
@@ -149,26 +150,30 @@ const GAMES = {
         gurbetci: ['Abi nein, olmaz!', 'Biraz daha, bitte.', 'Tamam abi, gut!'],
       }[ctx.dia] || ['Olmaz!', 'Biraz daha.', 'Tamam!'];
       el.innerHTML = `<div class="pz">
-        <div class="pz-man"><span>🧓</span><div><b>${esc(nm)}</b><div class="bubble-s" id="pSay">"Yüzde ${ask} isterim."</div></div></div>
+        <div class="pz-man"><span id="pYuz" class="avatar">🧓</span><div><b>${esc(nm)}</b><div class="bubble-s" id="pSay">"Yüzde ${ask} isterim."</div></div></div>
         <div class="pz-row"><small>Onun istediği</small><b id="pAsk">%${ask}</b><small>Sabrı</small><div class="g"><i id="pPat" style="width:100%"></i></div></div>
         <label class="ratio">Senin teklifin: <b id="pVal"></b></label>
         <input type="range" id="pSl" min="30" max="${ask0}" value="${ask0 - 6}">
         <div class="pz-btns"><button class="primary" id="pOffer">Teklif ver</button><button id="pAccept">Onun istediğini kabul et</button></div>
         <div class="pz-log" id="pLog"></div></div>`;
+      const kisi = { name: nm, role: 'AS', emoji: '🧓', dia: ctx.dia, quote: 'Yüzde isterim' };
+      yuzKoy($('pYuz'), kisi, 'konus');
+      const yz = (f) => { if ($('pYuz').classList.contains('yuz')) yuzKoy($('pYuz'), kisi, f); };
       const sl = $('pSl'); const upd = () => ($('pVal').textContent = `%${sl.value}`); sl.oninput = upd; upd();
       const scoreFor = (deal) => clamp((ask0 - deal) / (ask0 - res + 2), 0, 1) * 0.85 + 0.15;
       $('pAccept').onclick = () => finish(scoreFor(ask) * 0.9, { note: `%${ask} ile anlaştınız.` });
       $('pOffer').onclick = () => {
         const o = +sl.value; tur++;
         const log = (t) => $('pLog').insertAdjacentHTML('afterbegin', `<div>${t}</div>`);
-        if (o >= res) { $('pSay').textContent = `"${say[2]}"`; log(`Tur ${tur}: %${o} → kabul`); later(400, () => finish(scoreFor(o), { note: `%${o} ile anlaştınız (onun sınırı %${res} idi).` })); return; }
+        if (o >= res) { yz('mutlu'); $('pSay').textContent = `"${say[2]}"`; log(`Tur ${tur}: %${o} → kabul`); later(400, () => finish(scoreFor(o), { note: `%${o} ile anlaştınız (onun sınırı %${res} idi).` })); return; }
         const gap = res - o;
         sabir -= gap * 7 + 10;
         $('pPat').style.width = `${Math.max(0, sabir)}%`;
         $('pPat').style.background = sabir > 50 ? '#46a758' : sabir > 25 ? '#f4a20d' : '#e5484d';
-        if (sabir <= 0) { $('pSay').textContent = '"Kalk git! Başka müteahhit mi yok?"'; log(`Tur ${tur}: %${o} → masadan kalktı`); later(500, () => finish(0.05, { note: 'Arsa sahibi pazarlığı bıraktı.' })); return; }
+        if (sabir <= 0) { yz('kizgin'); $('pSay').textContent = '"Kalk git! Başka müteahhit mi yok?"'; log(`Tur ${tur}: %${o} → masadan kalktı`); later(500, () => finish(0.05, { note: 'Arsa sahibi pazarlığı bıraktı.' })); return; }
         ask = Math.max(res, Math.round((ask + o) / 2 + 1));
         $('pAsk').textContent = `%${ask}`;
+        yz(gap > 5 ? 'kizgin' : 'konus');
         $('pSay').textContent = `"${say[gap > 5 ? 0 : 1]} Yüzde ${ask} olur."`;
         log(`Tur ${tur}: %${o} → karşı teklif %${ask}`);
         sfx('click');
