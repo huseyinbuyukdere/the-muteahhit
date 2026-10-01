@@ -53,7 +53,11 @@ export function manset(s, c, res) {
     if (!p) return null;
     const gec = Math.round(p.gecikme || 0);
     if (p.kalite < 45) return { baslik: BUYUK(`${p.semt}'daki yeni binada çatlaklar`), alt: `Teslimden hemen sonra şikâyetler başladı${gec > 3 ? `; ${gec} ay da gecikti` : ''}`, ton: 'kotu', ders: 'Teslimde iskân belgesini ve yapı denetim raporunu iste; eksikleri tutanağa yazdır.', foto: 'catlak' };
-    return { baslik: BUYUK(`${p.name} teslim edildi`), alt: `${p.daire} aile anahtarını aldı${gec > 3 ? `, ${gec} ay gecikmeyle` : ', üstelik zamanında'}`, ton: gec > 6 ? 'gri' : 'iyi', foto: 'bina' };
+    const SECENEK = p.kalite >= 80
+      ? [`${p.semt}'ın en sağlam binası teslim edildi`, `${p.name}: denetimden tam not`, `${p.name} teslim edildi`]
+      : [`${p.name} teslim edildi`, `${p.semt}'da ${p.daire} aile yeni evinde`, `Anahtarlar sahiplerinde: ${p.name}`];
+    const sec = SECENEK[[...String(p.id ?? p.name)].reduce((t, ch) => t + ch.charCodeAt(0), 0) % SECENEK.length];
+    return { baslik: BUYUK(sec), alt:`${p.daire} aile anahtarını aldı${gec > 3 ? `, ${gec} ay gecikmeyle` : ', üstelik zamanında'}`, ton: gec > 6 ? 'gri' : 'iyi', foto: 'bina' };
   }
   return null;
 }
