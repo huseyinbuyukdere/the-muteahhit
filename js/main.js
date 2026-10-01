@@ -111,27 +111,27 @@ function baslaSecCiz() {
   }));
 }
 const INTRO = {
-  kalfa: { who: ['👴', 'Ustabaşı Hasan Usta', 'Lawo, mala tutmayı öğrendin, şimdi kendi binanı dik. Ama betona su kattırma, hakkımı helal etmem.'],
-    text: 'On beş yıl başkalarının şantiyesinde kalfalık yaptın. Birikmiş parayla küçük bir firma kurdun: 4 milyon lira, eski bir kamyonet ve seni seven ustalar. Tanınmıyorsun ama elin sağlam iş çıkarır.' },
-  aile: { who: ['👴', 'Rahmetli babanın sözü', 'Oğlum, bina dediğin içinde insan yaşayacak yerdir. Parayı kazanırsın, adını bir kere kaybedersen bulamazsın.'],
-    text: 'Babandan otuz yıllık bir tabela kaldı: tanınan bir isim, 13 milyon lira kasa… ve 7 milyon lira banka borcu. Babanın yaptığı eski binalar da hâlâ ayakta. Hepsi mi sağlam, bilmiyorsun.' },
-  damat: { who: ['🎩', 'Kayınpeder Zeki Bey', 'Abe damat, sen işini yap, belediyede ben varım. Kızımı üzme yeter.'],
-    text: 'Evlendiğinde kayınpederin sana firmanın kapısını açtı: 9 milyon lira ve belediyede tanıdık bir yüz. Yatırımcılar kimin damadı olduğunu biliyor. Senin kim olduğunu ise henüz bilmiyorlar.' },
+  kalfa: { who: ['👴', 'Ustabaşı Hasan Usta', 'Lawo, artık kendi binanı dik. Ama betona su kattırma, hakkımı helal etmem!'],
+    text: '15 yıl kalfalık yaptın, şimdi kendi firman var: 4 milyon lira, eski bir kamyonet ve sadık ustalar.' },
+  aile: { who: ['👴', 'Rahmetli babanın sözü', 'Oğlum, parayı kazanırsın; adını bir kere kaybedersen bulamazsın.'],
+    text: 'Babandan tanınan bir tabela kaldı: 13 milyon kasa, 7 milyon banka borcu. Eski binaları sağlam mı, bilmiyorsun.' },
+  damat: { who: ['🎩', 'Kayınpeder Zeki Bey', 'Abe damat, sen işini yap, belediyede ben varım.'],
+    text: 'Kayınpederin firmanın kapısını açtı: 9 milyon lira ve belediyede tanıdık bir yüz. Herkes kimin damadı olduğunu biliyor.' },
 };
 function introCard() {
   const I = E.BASLANGIC && INTRO[state.baslangic];
   if (I) return {
-    kind: 'sys', phase: 'sistem', title: `${E.dateLabel(0)} — ${E.BASLANGIC[state.baslangic].ad}`, noStep: true,
+    kind: 'sys', phase: 'sistem', title: E.BASLANGIC[state.baslangic].ad, noStep: true,
     speaker: { emoji: I.who[0], name: I.who[1], label: '', roleLabel: '', quote: I.who[2] },
-    text: I.text + ' Şehir büyüyor, eski evler yıkılıyor. Arsa sahipleriyle anlaş, yatırımcı bul, binanı dik, sat. Sözünü tutabilirsin… ya da tutmayabilirsin.',
-    ders: 'Bu oyundaki her senaryo, gerçek hayatta yaşanmış ya da haberlere yansımış bir yöntemden esinlenir. Her seçimden sonra, o yöntemin gerçek hayattaki karşılığını ve nasıl korunacağınızı göreceksiniz.',
+    text: I.text + ' Arsa bul, binanı dik, sat. Sözünü tutup tutmamak sana kalmış.',
+    ders: 'Her senaryo gerçekte yaşanmış bir yöntemden esinlenir. Her seçimden sonra nasıl korunacağını göreceksin.',
     choices: [{ label: 'Kolları sıva', fx: '', result: `Kartvizitlerin basıldı: "${state.firma} — Güvenin Adresi".` }],
   };
   return {
-    kind: 'sys', phase: 'sistem', title: `${E.dateLabel(0)} — Kariyerin Başlıyor`, noStep: true,
+    kind: 'sys', phase: 'sistem', title: 'Kariyerin Başlıyor', noStep: true,
     speaker: { emoji: '👴', name: 'Rahmetli babanın sözü', label: '', roleLabel: '', quote: 'Oğlum, bina dediğin içinde insan yaşayacak yerdir. Parayı kazanırsın, adını bir kere kaybedersen bulamazsın.' },
-    text: 'Elinde babandan kalma bir kamyonet, bir kalfalık tecrübesi ve 8 milyon lira var. Şehir büyüyor, eski evler yıkılıyor, herkes müteahhit olmak istiyor. Arsa sahipleriyle anlaş, yatırımcı bul, binanı dik, sat. Sözünü tutabilirsin… ya da tutmayabilirsin.',
-    ders: 'Bu oyundaki her senaryo, gerçek hayatta yaşanmış ya da haberlere yansımış bir yöntemden esinlenir. Her seçimden sonra, o yöntemin gerçek hayattaki karşılığını ve nasıl korunacağınızı göreceksiniz.',
+    text: 'Elinde eski bir kamyonet ve 8 milyon lira var. Arsa bul, binanı dik, sat. Sözünü tutup tutmamak sana kalmış.',
+    ders: 'Her senaryo gerçekte yaşanmış bir yöntemden esinlenir. Her seçimden sonra nasıl korunacağını göreceksin.',
     choices: [{ label: 'Kolları sıva', fx: '', result: `Kartvizitlerin basıldı: "${state.firma} — Güvenin Adresi".` }],
   };
 }
@@ -395,7 +395,9 @@ function showCard(c) {
   if (sp) {
     yuzKoy($('spEmoji'), sp, 'konus');
     $('spName').textContent = sp.name;
-    $('spMeta').textContent = [sp.roleLabel, sp.label].filter(Boolean).join(' · ');
+    // Şive etiketi yazı kalabalığı yapıyor; sadece üzerine gelince görünür
+    $('spMeta').textContent = sp.roleLabel || '';
+    $('spMeta').title = sp.label || '';
     $('spQuote').textContent = `“${ek(sp.quote)}”`;
   }
   $('cardText').textContent = ek(c.text);
@@ -474,7 +476,7 @@ function doChoose(i, mini) {
   if (!state.ending) {
     const nx = E.drawCard(state);
     state.queue.unshift(nx);
-    const who = nx.speaker ? `${nx.speaker.emoji} ${nx.speaker.name}` : '📞 Telefon çalıyor';
+    const who = nx.speaker ? `${nx.speaker.emoji} ${nx.speaker.name.charAt(0).toLocaleUpperCase('tr-TR')}${nx.speaker.name.slice(1)}` : '📞 Telefon çalıyor';
     $('teaser').innerHTML = `<small>SIRADAKİ</small> ${esc(who)} — <b>${esc(nx.title)}</b>`;
     $('teaser').classList.remove('hidden');
   }
@@ -661,13 +663,17 @@ function showEnding() {
   sonRozetler = [...(s.rozetler || []).map((id) => ROZ.ROZETLER.find((r) => r.id === id)).filter(Boolean), ...ROZ.kontrol(s, k, gorulen)];
   const oner = ROZ.oneri(s);
   const net = E.netWorth(s);
+  // Önce en önemli 6 rakam; gerisi "Bütün rakamlar" altında
   const stats = [
-    [E.dateLabel(s.t), 'Kariyerin sonu'], [s.completed, 'Tamamlanan proje'], [s.daireTeslim, 'Teslim edilen daire'],
+    [E.dateLabel(s.t), 'Kariyerin sonu'], [s.completed, 'Tamamlanan proje'],
     [E.fmt(k === 'kacak' ? Math.max(net, s.kacirilan || 0) : net), k === 'kacak' ? 'Yanındaki para' : 'Net servet'],
-    [s.m.toLocaleString('tr-TR'), 'Mağdur'], [E.fmt(s.vergi), 'Vergiden kaçırılan'],
-    [s.cokme, 'Yıkılan bina'], [s.olu, 'Can kaybı'], [Math.round(s.v), 'Vicdan'],
+    [s.m.toLocaleString('tr-TR'), 'Mağdur'], s.olu ? [s.olu, 'Can kaybı'] : [s.daireTeslim, 'Teslim edilen daire'], [Math.round(s.v), 'Vicdan'],
+  ];
+  const digerStats = [
+    s.olu ? [s.daireTeslim, 'Teslim edilen daire'] : [s.olu, 'Can kaybı'], [E.fmt(s.vergi), 'Vergiden kaçırılan'], [s.cokme, 'Yıkılan bina'],
     [Object.keys(s.owned || {}).length, 'Lüks ve yan iş'], [(s.sins || []).length, 'Patlamamış dosya'], [Object.keys(s.goals || {}).length + '/' + E.GOALS.length, 'Hedef'],
   ];
+  const kutu = (l) => l.map(([v, t]) => `<div><b>${v}</b><small>${t}</small></div>`).join('');
   const yarim = E.activeProjects(s).length;
   const dest = s.escape?.dest ? E.DEST[s.escape.dest] : null;
   const extra = [
@@ -681,7 +687,8 @@ function showEnding() {
     ${yarim && (k === 'kacak' || k === 'iade' || k === 'iflas' || k === 'hapis') ? `<p><b>${yarim} proje yarım kaldı.</b> O binalarda oturmayı bekleyen aileler var.</p>` : ''}
     ${sonRozetler.length ? `<div class="rozet-yeni"><p>🏅 Bu kariyerde kazandığın rozetler</p>${sonRozetler.map((r) => `<span class="rozet">${r.emoji} ${esc(r.ad)}</span>`).join('')}</div>` : ''}
     <p class="bir-tur">Rozetler: <b>${Object.keys(ROZ.kazanilan()).length}/${ROZ.ROZETLER.length}</b> · Sonlar: <b>${gorulen}/${Object.keys(E.ENDINGS).length}</b>${oner ? `<br>Sıradaki rozet: ${oner.emoji} <b>${esc(oner.ad)}</b> — ${esc(oner.nasil)}` : ''}</p>
-    <div class="stat-grid">${stats.map(([v, l]) => `<div><b>${v}</b><small>${l}</small></div>`).join('')}</div>
+    <div class="stat-grid">${kutu(stats)}</div>
+    <details class="stat-diger"><summary>Bütün rakamlar</summary><div class="stat-grid">${kutu(digerStats)}</div></details>
     <p class="disclaimer">Oyundaki her yöntemin gerçek hayattaki karşılığını ve nasıl korunacağınızı Farkındalık Rehberi'nde bulabilirsiniz.</p></div>`;
   $('ending').classList.remove('hidden');
 }
@@ -691,23 +698,20 @@ function openModal(which) {
   let h = '';
   if (which === 'nasil') {
     h = `<h2>Nasıl Oynanır</h2>
-    <p>2012'de küçük bir müteahhit olarak başlarsın. Her kart bir aydır. Seçimlerin kasanı, itibarını, yatırımcı güvenini, ekibini, hukuki riskini ve vicdanını değiştirir. Seçimlerin sonuçları seçmeden önce gösterilmez: tıpkı gerçek hayatta olduğu gibi.</p>
-    <h3>Bir projenin yolculuğu</h3>
-    <ol><li><b>Arsa sahipleri:</b> kat karşılığı pazarlık, vekalet, sözleşme maddeleri.</li>
-    <li><b>Yatırımcı:</b> inşaatı finanse edecek parayı bul. Yatırımcılara verdiğin söz bir sonraki projede önüne gelir.</li>
-    <li><b>İnşaat:</b> usta bul, hakedişleri öde (ya da ödeme), betonu seç. Ön satış yaptıysan kaliteyi düşürmek cazip gelir.</li>
-    <li><b>Satış:</b> yağla, pulla, tapuda değeri düşük göster… ya da gösterme.</li>
-    <li><b>Teslim:</b> anahtarlar, arsa sahipleri ve yatırımcılarla hesaplaşma.</li></ol>
-    <h3>Çark</h3>
-    <p>Projeler bittikçe aynı anda daha fazla işe girebilirsin (Yeni Proje). Kasa eksiye düşerse bir işin parasını diğerine aktarmaya başlarsın. Hukuki risk ya da borç çok yükselirse <b>Kaç</b> düğmesi belirir.</p>
-    <h3>Hayatın</h3><p><b>Hayatım</b> sekmesinden Mercedes, villa, yat alabilir; galeri, düğün salonu, beton santrali, otel, TV kanalı gibi yan işler kurabilirsin. Her biri yeni olaylar ve yeni kirli fırsatlar getirir.</p>
-    <h3>Dolaptaki iskeletler</h3><p>Vicdansız kararların bazıları dosyaya girer (🗄️). Yıllar sonra bir gazeteci, eski bir usta ya da müfettiş kapını çalabilir.</p>
-    <h3>Kaçış ve son perde</h3><p>Kaçmaya karar verirsen dört adımlı bir kaçış operasyonu başlar: parayı topla, sınırdan geçir, rota seç, pasaport kontrolünden geç. Zengin olursan son perdede hesap günü ve miras kararı seni bekler.</p>
-    <h3>Deprem</h3><p>Yaptığın binalar yıllar sonra bir depremde sınanır. Kalite düşükse, bunun bedelini insanlar öder; oyun da bunu hatırlatır.</p>
-    <h3>Sonlar</h3><p>12 farklı son var: dürüst patron, dokunulmaz baron, kaçak, kırmızı bülten, cezaevi, iflas ve dahası. Kötü seçimler de kazanabilir. Kısayollar: 1-4 seçim, Enter devam. Telefonda seçeneği yana kaydırarak seçebilir, sonucu yana atarak geçebilirsin.</p>`;
+    <ul class="nasil-liste">
+    <li>🃏 <b>Her kart bir ay.</b> Seç, sonra ne olduğunu gör. Sonuçlar önceden yazmaz.</li>
+    <li>🏗️ <b>Bir bina:</b> arsa → yatırımcı → inşaat → satış → teslim.</li>
+    <li>📊 <b>Üstteki çubuklar:</b> itibar, yatırımcı, ekip, hukuki risk, vicdan.</li>
+    <li>🗄️ <b>Kirli işler dosyaya girer.</b> Yıllar sonra biri kapını çalabilir.</li>
+    <li>🌍 <b>Deprem gelir.</b> Kötü yapılan bina yıkılır; bedelini insanlar öder.</li>
+    <li>🛥️ <b>Hayatım:</b> araba, villa, yan işler. Her biri yeni fırsat ve yeni tuzak.</li>
+    <li>✈️ <b>Risk büyürse "Kaç" düğmesi çıkar.</b></li>
+    <li>🏁 <b>12 farklı son var.</b> Kötü yol da kazanabilir ama bedeli görünür.</li>
+    </ul>
+    <p class="count">⌨️ 1-4 seç, Enter devam · 📱 Seçeneği yana kaydır</p>`;
   } else if (which === 'rehber') {
-    h = `<h2>Farkındalık Rehberi</h2><p>Oyundaki çakallıklar ve gerçek hayatta nasıl korunacağınız. Bu bilgiler genel bilgilendirme amaçlıdır; somut durumlarda bir avukata danışın.</p>
-    ${REHBER.map((r) => `<div class="rehber-item"><h3>${esc(r.t)}</h3><p>${esc(r.x)}</p><p class="korun">🛡️ ${esc(r.k)}</p></div>`).join('')}
+    h = `<h2>Farkındalık Rehberi</h2><p class="count">Oyundaki hileler ve gerçek hayatta nasıl korunursun. Genel bilgidir; somut durumda avukata danış.</p>
+    ${REHBER.map((r) => `<div class="rehber-item"><h3>${esc(r.t)}</h3><p class="korun">🛡️ ${esc(r.k)}</p><details><summary>Nasıl yapılıyor?</summary><p>${esc(r.x)}</p></details></div>`).join('')}
     <h3>Kaynaklar</h3><ul>${KAYNAKLAR.map(([t, u]) => `<li><a href="${u}" target="_blank" rel="noopener">${esc(t)}</a></li>`).join('')}</ul>`;
   } else if (which === 'rozetler') {
     const k = ROZ.kazanilan();

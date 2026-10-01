@@ -12,6 +12,10 @@ const SON = {
   deprem: ['ENKAZIN HESABI SORULUYOR', 'Bilirkişi: kolon kesilmiş, beton zayıf, denetim kâğıt üstünde', 'kotu', 'Ev alırken yapı denetim raporunu, zemin etüdünü ve beton test sonuçlarını iste.'],
   iflas: ['İNŞAAT FİRMASI İFLAS ETTİ', 'Yarım kalan binaların alıcıları ortada kaldı', 'kotu', 'Kaba inşaatı bitmemiş projede, ödemeyi işin ilerlemesine bağlayan sözleşme yap.'],
   baron: ['"DOKUNULMAZ" MÜTEAHHİT YİNE ÖDÜL ALDI', 'Mağdurların sesi haberlere çıkamıyor', 'kotu', 'Reklam ve ödül güven belgesi değildir; firmanın eski projelerini ve davalarını araştır.'],
+  itiraf: ['MÜTEAHHİT SAVCILIĞA GİDİP HER ŞEYİ ANLATTI', 'Etkin pişmanlık sayesinde bazı mağdurlar alacağını alabilecek', 'gri', 'Mağdursan diğer mağdurlarla bir araya gel; ortak avukat ve ortak dosya daha güçlüdür.'],
+  kovuldun: ['MAHALLEDE KİMSE O MÜTEAHHİTLE ÇALIŞMIYOR', 'Arsa sahipleri ve emlakçılar kapıyı kapattı', 'kotu', 'Arsanı vermeden önce müteahhidin eski arsa sahipleriyle konuş.'],
+  yatirimci: ['YATIRIMCILAR PARASINI GERİ İSTEDİ', 'Sözünü tutmayan firmanın kasası boşaldı', 'kotu', 'Yüksek getiri vaadiyle para toplayan firmaya yatırım yapmadan önce sözleşmeyi avukata göster.'],
+  siyaset: ['MÜTEAHHİT İMAR KOMİSYONUNDA', 'Kuralları uygulayan değil, yazan tarafa geçti', 'gri', 'İmar değişikliklerini belediye meclis kararlarından takip et; itiraz süresi kısadır.'],
   patron: ['SÖZÜNÜ TUTAN MÜTEAHHİT BÜYÜDÜ', 'Binaları depremde ayakta kaldı, alıcılar tapusunu zamanında aldı', 'iyi'],
   emekli: ['USTA MÜTEAHHİT EMEKLİYE AYRILDI', 'Arkasında yıllarca ayakta kalacak binalar bıraktı', 'iyi'],
 };

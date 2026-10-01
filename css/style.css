@@ -537,3 +537,8 @@ body.cine::before, body.cine::after { height: 7vh; }
 @keyframes gzGit { to { opacity: 0; transform: translateY(30px); } }
 @media (max-width: 420px) { .gz-ust span:last-child { display: none; } .gz-foto { width: 72px; flex-basis: 72px; } }
 @media (prefers-reduced-motion: reduce) { .gazete { animation: none; transform: rotate(-1deg); } }
+.stat-diger { margin: 8px 0 4px; text-align: center; }
+.stat-diger summary { cursor: pointer; color: var(--muted, #9aa3ad); font-size: 13px; padding: 6px; }
+.stat-diger .stat-grid { margin-top: 6px; }
+.nasil-liste { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 8px; }
+.nasil-liste li { background: var(--panel2); border-radius: 10px; padding: 9px 12px; line-height: 1.4; }

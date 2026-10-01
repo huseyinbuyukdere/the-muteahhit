@@ -18,7 +18,7 @@ export const REGION = {
 // ---------- ARSA ----------
 export const YENI_ARSA = [
   S("Riskli Yapı Raporu",
-    "{SM}'daki 40 daireli eski blok kentsel dönüşüme girecek. Bina riskli sayılmazsa hak sahipleri anlaşmaya yanaşmıyor. Laboratuvar sahibi göz kırpıyor: 'Karot sonucu istediğin gibi çıkar.'",
+    "{SM}'daki eski blok riskli sayılmazsa dönüşüm olmaz. Laboratuvarcı göz kırpıyor: 'Beton testi istediğin gibi çıkar.'",
     "Riskli yapı tespiti lisanslı kuruluşlarca yapılır ve hak sahipleri rapora itiraz edebilir. Sağlam bir binayı 'riskli' göstermek de, çürük bir binayı 'sağlam' göstermek de suçtur. Hak sahipleri raporun karot sonuçlarını mutlaka istemelidir.",
     ["Gerçek karot testi yaptır, sonucu kabul et", "n-0.3 d+1 v+4 i+2", "Bina gerçekten riskli çıktı. Hak sahipleri raporu kendi gözleriyle gördü, masaya oturdu."],
     ["Laboratuvarla anlaş, raporu 'riskli' yazdır", "n-0.2 s+6 v-12 r+7 F:sahteRiskli", "Rapor çıktı. Komşular korkup imzaladı. Karotun nereden alındığını kimse sormadı."],
@@ -32,28 +32,28 @@ export const YENI_ARSA = [
     ["Binanın suyunu ve elektriğini kestir, 'teknik arıza' de", "d-1 s-10 v-14 r+8 m+1 F:baski", "Teyze mum ışığında oturuyor. Torunu olanları telefonla çekti."]),
 
   S("Kira Yardımı Bitti",
-    "Dönüşüm projesinde hak sahiplerine söz verdiğin kira yardımı 18 aydır ödeniyor. Proje gecikti; bütçeden 'kira kalemi' kısılmak isteniyor. {AS} kapıda: 'Kirayı kesersen biz nerede oturacağız?'",
+    "Proje gecikti, 18 aydır kira yardımı ödüyorsun. Muhasebe kesmek istiyor. {AS}: 'Kirayı kesersen biz nerede oturacağız?'",
     "Kentsel dönüşüm sözleşmelerinde kira yardımının süresi ve gecikmede ne olacağı açıkça yazılmalıdır. Hak sahipleri, gecikme halinde kira kaybını müteahhitten talep edebilir.",
     ["Kira yardımını teslim gününe kadar sürdür", "n-0.8 s+8 v+4", "Hak sahipleri içerlemedi, bekliyor."],
     ["Yarıya düşür, 'kriz var' de", "n+0.4 s-8 v-4", "Ev sahipleri artık her ay 'ne zaman bitecek' diye arıyor."],
     ["Tamamen kes, 'sözleşmede 12 ay yazıyordu' de", "n+0.8 s-15 v-8 m+3 r+2", "Sözleşmeyi okuyan avukat, maddenin çok farklı yazdığını gösterdi."]),
 
   S("Net mi Brüt mü?",
-    "{AS} ile kat karşılığı sözleşme masasındasın. Ona '120 metrekare daire' diyorsun. Avukatın kulağına fısıldıyor: 'Brüt yazalım, ortak alan payını da ekleriz; net 85 çıkar.'",
+    "{AS}'e '120 metrekare daire' dedin. Avukatın fısıldıyor: 'Brüt yazalım; ortak alanlar düşünce net 85 kalır.'",
     "Brüt metrekareye merdiven, duvar ve ortak alan payı da girer; net kullanım alanı çok daha küçüktür. Sözleşmede 'net kullanım alanı' açıkça yazılmalı, daire planı ve kat numarası belirtilmelidir.",
     ["Sözleşmeye net metrekareyi ve planı yaz", "h+2 s+8 v+3", "Arsa sahibi planı katlayıp cebine koydu. 'İlk defa biri anlattı' dedi."],
     ["'Brüt 120' yaz, sormazsa anlatma", "h-3 s+2 v-8 F:brutHile", "İmza atıldı. Anahtar gününe kadar kimse metreyi ölçmeyecek."],
     ["Daireyi 'müteahhit tarafından belirlenir' diye bırak", "h-2 s-2 v-5", "Arsa sahibi en alttaki, güneş görmeyen daireyi alacak ama henüz bilmiyor."]),
 
   S("Tapuyu Peşin İste",
-    "Kat karşılığı anlaşmada {AS}'e 'arsanın tapusunun tamamını şimdi üzerime al, dairelerin tapusunu bitince veririm' demeyi düşünüyorsun. Bankaya teminat gösterip kredi çekebilirsin.",
+    "Aklında bir fikir: arsanın tapusunu şimdi üzerine al, {AS}'in dairelerini bitince ver. Tapuyla bankadan kredi çekersin.",
     "Arsa sahipleri tapuyu tek seferde müteahhide devretmemelidir. Kademeli devir (inşaat ilerledikçe pay devri), teminat mektubu ve tapuya şerh edilen noter sözleşmesi arsa sahibini korur. Müteahhit iflas ederse tapusunu vermiş arsa sahibi elinde hiçbir şey kalmayabilir.",
     ["Kademeli devir öner: her kat bitince pay devredilsin", "s+10 v+4 i+2", "Arsa sahibinin avukatı 'bu müteahhit işini biliyor' dedi."],
     ["Tapunun tamamını al, bankaya ipotek et", "n+2 b+2 s+2 v-8 r+3 F:arsaIpotek", "Kredi geldi. Arsa sahibinin evi artık bankanın teminatı."],
     ["Teminat mektubu ver, tapuyu sonra al", "n-0.3 s+8 v+2", "Arsa sahibi rahatladı. Sen biraz daha az nakitle devam ediyorsun."]),
 
   S("Gecikme Cezası Maddesi",
-    "Sözleşme taslağında gecikme cezası 'aylık 1.000 TL' yazıyor. {AS}'in yeğeni hukuk okuyor, maddeyi işaretlemiş: 'Bu ceza, kiranın onda biri bile değil.'",
+    "Sözleşmede gecikme cezası 'aylık 1.000 TL'. {AS}'in hukukçu yeğeni itiraz ediyor: 'Bu, kiranın onda biri bile değil.'",
     "Kat karşılığı sözleşmelerde gecikme cezası, arsa sahibinin kira kaybını karşılayacak düzeyde olmalıdır. Sembolik cezalar müteahhidi teslim için zorlamaz.",
     ["Cezayı piyasa kirası kadar yap", "s+10 v+3 h+1", "Yeğen başını salladı. Masadaki hava değişti."],
     ["'Hep böyle yazılır' diye sembolik bırak", "s-4 v-5", "İmza atıldı. Yeğen ise telefonuna bir not düştü."],
@@ -67,35 +67,35 @@ export const YENI_ARSA = [
     ["Zeytinliğin kenarındaki imarlı parçayı al", "n-0.4 v+2", "Ağaçlar yerinde. Proje küçüldü ama tertemiz."])),
 
   W({ q: "R:karadeniz" }, S("Dere Kenarında Arsa",
-    "{SM}'da {AS} dere kenarındaki arsasını ucuza veriyor. 'Otuz yıldır taşmadi uşağum' diyor. Harita mühendisi haritada mavi çizgiyi gösteriyor: dere koruma bandı.",
+    "{AS} dere kenarındaki arsasını ucuza veriyor: 'Otuz yıldır taşmadi uşağum.' Haritada ise dere koruma bandı var.",
     "Karadeniz'de dere yataklarına ve taşkın alanlarına yapılan binalar, sel felaketlerinde can kaybının başlıca nedenlerindendir. Dere koruma bantlarına yapı izni verilmemesi gerekir; alıcılar taşkın riskini belediyeden ve afet haritalarından sorgulamalıdır.",
     ["Arsayı alma", "d+1 v+5", "{AS} 'kaybedersun' dedi. İki yıl sonraki selde o arsa haberlerdeydi."],
     ["Al, istinat duvarı ve taşkın önlemiyle yap", "n-1 k+4 v+1 r+2", "Masraflı ama bina yüksekte ve korunaklı."],
     ["Al, imar planında 'düzeltme' yaptır", "n+1.5 v-12 r+8 k-4 F:dereYatagi", "Plan değişti. Dere değişmedi."])),
 
   W({ q: "R:istanbul" }, S("Fay Hattı Tartışması",
-    "{SM}'da arsa için zemin etüdü geldi: zemin yumuşak, yeraltı suyu yüksek. {AS} 'bizim evler hep burada durdu' diyor. Statikçi 'fore kazık şart' diyor, maliyet %15 artıyor.",
+    "{SM}'daki zemin yumuşak, su yüksek çıktı. Statikçi 'derin kazık şart' diyor; maliyet %15 artar.",
     "İstanbul'un deprem riski yüksektir; zayıf zeminlerde zemin iyileştirme ve derin temel hayati önemdedir. Ev alırken zemin etüdü raporu istenmeli, raporun gerçekten o parsel için yapıldığı kontrol edilmelidir.",
     ["Fore kazıkla doğru temel yap", "n-1 k+12 v+3", "Temel pahalı ama bina zemine çivilendi."],
     ["Başka parselin zemin raporunu kopyala", "n+0.8 k-15 v-12 r+6 F:sahteZemin", "Rapor mükemmel. Parsel numarası da yeni yazıldı."],
     ["Katı azalt, radye temelle yetin", "n-0.3 k+5 h-2", "Daire sayısı düştü ama hesap tutuyor."])),
 
   W({ q: "R:ankara", sp: ["Nevzat Bey", "YT", "Evladım, üyeler bana güvenir. Sen inşaatı yap, gerisini biz kurulda hallederiz.", "🧑‍💼", "ankara"] }, S("Kooperatif Teklifi",
-    "{SM}'da emekli daire başkanı Nevzat Bey, 300 üyeli bir yapı kooperatifinin yönetiminde. 'İnşaatı sen yap, aidatlar senin hesabına aksın. Yönetim kurulunu da biz hallederiz' diyor.",
+    "300 üyeli bir kooperatifin başkanı Nevzat Bey: 'İnşaatı sen yap, aidatlar senin hesabına aksın. Gerisini biz hallederiz.'",
     "Yapı kooperatiflerinde üyeler yıllarca aidat öder; yönetim ve müteahhit arasındaki kontrolsüz ilişkiler, 'bitmeyen kooperatif' mağduriyetlerinin başlıca sebebidir. Üyeler genel kurullara katılmalı, harcama belgelerini istemeli, denetim kurulunu işletmelidir.",
     ["Şeffaf sözleşme: hakediş karşılığı, bağımsız denetimle", "n+1 i+5 v+4", "Genel kurulda ilk kez harcama tablosu gösterildi. Üyeler alkışladı."],
     ["Aidatları doğrudan kendi hesabına al", "n+3 y+2 v-12 r+6 m+4 F:kooperatif", "Para her ay akıyor. İnşaat ise temelde bekliyor."],
     ["Nevzat Bey'e 'danışmanlık' ücreti öde, işi al", "n+1.5 v-8 r+5", "Kooperatif başkanı yeni bir cip aldı. Üyeler bunu konuşuyor."])),
 
   W({ q: "R:konya" }, S("Faizsiz Ev Vaadi",
-    "{SM}'da bir grup esnaf sana ortaklık teklif ediyor: 'Faizsiz ev sistemi' kuralım; insanlar her ay taksit yatırır, kura çıkana ev verilir. 'Hem sevap hem kazanç' diyorlar.",
+    "Esnaflar teklif ediyor: 'Faizsiz ev' sistemi kuralım. Herkes her ay taksit yatırsın, kura çıkana ev verilsin.",
     "Lisanssız 'faizsiz ev sistemi', 'eminevim' benzeri çekilişli tasarruf modelleri yıllarca denetimsiz çalıştı; batan şirketlerde binlerce kişi birikimini kaybetti. Bu tür sistemlere girmeden önce şirketin yasal izni ve denetim durumu sorgulanmalıdır.",
     ["Reddet: 'Bu bir sistem değil, zincir'", "v+5 i+2", "Esnaflar başka bir müteahhide gitti. İki yıl sonra adları bir haberdeydi."],
     ["Kur, ilk kuraları hızlı çıkar, gerisini sonra düşünürsün", "n+3 y+3 v-15 r+10 m+6 F:faizsizEv", "İlk on kişi evini aldı ve herkese anlattı. Sırada 800 kişi var."],
     ["Sadece yasal izinli bir finansman kuruluşuyla çalış", "n+0.5 i+3", "Daha az para, daha çok uyku."])),
 
   W({ q: "R:kayseri", sp: ["pastırmacı Abdullah Bey", "AS", "Hee, yüzde elli beş, dükkânlar benim, faiz senin. Hesap tamam mı, gılıbık?", "🥩", "ic"] }, S("Pastırmacının Pazarlığı",
-    "{SM}'da arsa sahibi pastırmacı Abdullah Bey. Kayseri pazarlığının hakkını veriyor: 'Yüzde elli beş ver, ama dükkânlar da benim olsun, bir de sana kefil olayım, faizini sen öde.'",
+    "Arsa sahibi pastırmacı Abdullah Bey pazarlıkta usta: 'Yüzde elli beş ver, dükkânlar da benim olsun, faizini sen öde.'",
     "Pazarlıkta her maddenin karşılığı yazılı olmalıdır: dükkân payı, kefalet, faiz yükü. Sözlü 'hallederiz'ler sonradan anlaşmazlık çıkarır.",
     ["Her maddeyi tek tek yaz, dengeli bir oran bul", "h+2 s+8 v+2", "Abdullah Bey eline pastırma tutuşturdu: 'Adam gibi pazarlık ettin.'"],
     ["Her şeye 'tamam' de, sözleşmeye yazmadan", "h-2 s+4 v-5 F:sozluAnlasma", "Masadan kalktınız. Kim neyi kabul etti, kimse tam hatırlamıyor."],
@@ -126,14 +126,14 @@ export const YENI_YATIRIM = [
     ["Parasını hemen öde", "n-1.5 g+4", "Kasadan para çıktı ama söylenti seni teğet geçti."]),
 
   W({ q: "R:antep", sp: ["baklavacı Halil Usta", "YT", "Gardaş, bu para temiz para, baklava parası. Banka mankaya gerek yok.", "🥮", "antep"] }, S("Baklavacının Doları",
-    "{SM}'da baklavacı Halil Usta dükkânın arkasında seni bekliyor. Çantada dolar var: 'Gardaş, bankaya girmeyecek, senet de istemem. Bir kat bana, gerisi bizim aramızda.'",
+    "Baklavacı Halil Usta'nın çantasında dolar var: 'Gardaş, bankaya girmeyecek, senet de istemem. Bir kat bana.'",
     "Kayıt dışı nakitle yapılan yatırımlar, anlaşmazlık halinde ispatı zor alacaklar doğurur ve suç gelirlerinin aklanmasında kullanılabilir. Yatırım yapan kişi, parasını banka üzerinden göndermeli ve sözleşmeyi noterde yapmalıdır.",
     ["Parayı bankadan al, noterde sözleşme yap", "n+1.5 y+1.5 g+4 v+2", "Halil Usta söylendi ama noterde baklava ikram etti."],
     ["Çantayı al, kayda geçirme", "n+3 y+2 x+1 v-8 r+5", "Para kasada. Kimin parası olduğu sadece ikinizin arasında."],
     ["Teşekkür et, alma", "", "Halil Usta omuz silkti: 'Senin kısmetin değilmiş.'"])),
 
   W({ q: "R:akdeniz", sp: ["aracı Rüstem Bey", "AL", "Ağam, ekspertizi yüksek gösterek, herkes kazanır. Kimse sormaz.", "🕶️", "adana"] }, S("Vatandaşlık İçin Ekspertiz",
-    "{SM}'da yabancı bir alıcı grubu var. Aracı Rüstem Bey: 'Vatandaşlık için daire değeri en az şu kadar görünmeli. Ekspertizi şişirelim, aradaki farkı bölüşürüz.'",
+    "Aracı Rüstem Bey yabancı alıcılar getirdi: 'Vatandaşlık için ekspertizi şişirelim, farkı bölüşürüz.'",
     "Yatırım yoluyla vatandaşlık başvurularında değerleme raporlarının şişirilmesi, hem alıcıyı hem piyasayı yanıltır; bu yöntem soruşturmalara konu olmuştur. Yabancı alıcılar da değerleme raporunu bağımsız bir kuruluşa kontrol ettirmelidir.",
     ["Gerçek değer üzerinden sat", "n+1 i+3 v+3", "Alıcılar az daire aldı ama tekrar gelecekler."],
     ["Ekspertizi şişir, farkı böl", "n+3 x+1 v-12 r+9 F:sisikEkspertiz", "Kâğıtta değer iki katı. Daire aynı daire."],
@@ -147,7 +147,7 @@ export const YENI_YATIRIM = [
     ["{ME} ile kahveye git, 'şartnameyi' konuş", "n+3 v-12 r+10 F:ihaleFesat", "Şartnamenin bir maddesi sadece sende olan bir belgeyi istiyor artık."]),
 
   S("Çinli Vinç, Alman Teminat",
-    "Rezidans için vinç ve kalıp sistemini yurt dışından alacaksın. Tedarikçi akreditif istiyor. {YT} diyor ki: 'Faturayı yüksek kestir, farkı yurt dışında bir hesapta beklet.'",
+    "Vinci yurt dışından alacaksın. {YT} fısıldıyor: 'Faturayı yüksek kestir, farkı yurt dışındaki bir hesapta beklet.'",
     "İthalatta fatura şişirme, yurt dışına kaynak aktarmanın ve vergi kaçırmanın bilinen yöntemlerindendir; gümrük ve vergi incelemelerinde tespit edilir.",
     ["Gerçek faturayla al", "n-0.5 g+2", "Temiz iş. Muhasebeci derin bir nefes aldı."],
     ["Faturayı şişir, farkı dışarıda tut", "n+1 x+1.5 v-8 r+6 F:yurtdisiHesap", "Kaçış günü gelirse işe yarayacak bir hesap açıldı."],
@@ -157,14 +157,14 @@ export const YENI_YATIRIM = [
 // ---------- İNŞAAT ----------
 export const YENI_INSAAT = [
   S("Taşeronun Taşeronu",
-    "Kaba inşaatı {US}'a verdin. O da işi başka bir ekibe, o ekip de bir dayıbaşına devretmiş. Şantiyedeki işçiler kime çalıştığını bilmiyor; yevmiyeleri her el değiştirmede biraz kesilmiş.",
+    "{US} işi başka ekibe, o da bir dayıbaşına devretmiş. İşçiler kime çalıştığını bilmiyor; yevmiyeleri her elde kesilmiş.",
     "Alt işveren zincirleri uzadıkça ücretler düşer, sigorta ve iş güvenliği kaybolur. Ana işveren, alt işverenin işçilerine karşı ücret ve sigorta borçlarından birlikte sorumludur. İşçiler ALO 170'e başvurabilir.",
     ["Zinciri kır: işçileri doğrudan sigortalı işe al", "n-0.8 e+12 k+4 v+5", "İlk kez maaş bordrosu gören işçiler var. Hız da arttı."],
     ["Karışma, işi bitirsinler", "e-4 k-3 v-4 r+2", "Kimin kime borcu olduğu bilinmiyor. Sadece duvarlar yükseliyor."],
     ["Dayıbaşına 'ucuza bitir' diye prim teklif et", "n+0.5 e-8 k-6 v-8 r+3 m+1", "Dayıbaşı işçilerden bir yevmiye daha kesti."]),
 
   S("Ölümlü İş Kazası",
-    "Asansör boşluğunda korkuluk yoktu. Genç bir işçi yedinci kattan düştü, hastaneye yetişemedi. Ailesi köyden yolda. {US} titreyerek soruyor: 'Ne diyeceğiz abi?'",
+    "Asansör boşluğunda korkuluk yoktu. Genç bir işçi yedinci kattan düştü, kurtarılamadı. {US}: 'Ne diyeceğiz abi?'",
     "İnşaatta her yıl yüzlerce işçi hayatını kaybediyor; en sık sebep yüksekten düşme. Ölümlü kazalar mutlaka bildirilmeli, savcılık soruşturması yapılır. Kazayı 'kalp krizi' ya da 'şantiye dışında oldu' diye gizlemek hem suçtur hem de ailenin tazminat hakkını elinden alır.",
     ["Kazayı bildir, aileye destek ol, şantiyeyi güvenli hale getir", "n-1.5 r+6 i-3 v+6 e+6 d+2", "Savcılık dosya açtı. Aile seni suçladı, haklı olarak. Ama şantiyede bir daha korkuluksuz boşluk kalmadı."],
     ["'Şantiye dışında düştü' diye tutanak tutturt", "r+10 v-20 e-12 m+2 F:kazaOrtbas", "Tutanağı imzalayan işçilerin gözü yerde. Biri video çekmişti."],
@@ -178,14 +178,14 @@ export const YENI_INSAAT = [
     ["Kayıtsızları arka kapıdan kaçır", "r+8 e-10 v-10 F:kacakIsci", "Kaçan işçilerden biri iskeleden atlarken bileğini kırdı."]),
 
   S("Kur Farkı: Demir Fiyatı",
-    "İnşaat demirinin tonu bir ayda %30 arttı. Sözleşmede fiyat farkı maddesi yok. {US}: 'Ya kalan katlar için ince demir alacağız ya da para bulacağız abi.'",
+    "Demir bir ayda %30 zamlandı, sözleşmede fiyat farkı yok. {US}: 'Ya ince demir alacağız ya para bulacağız abi.'",
     "Maliyet artışları, müteahhitleri kaliteden kısmaya iter. Projede yazan donatı çapı ve sayısı değiştirilemez; yapı denetim her döküm öncesi donatıyı kontrol etmelidir.",
     ["Farkı öz kaynaktan karşıla, projeye sadık kal", "n-1.2 k+4 v+3", "Kâr marjın eridi. Kolonlar projedeki gibi."],
     ["Bir çap ince demir kullan", "n+0.6 k-12 v-12 r+5 F:kotuBeton", "Demir ince, ağırlık hafif, vicdan ağır."],
     ["Alıcılara 'kur farkı' faturası kes", "n+0.8 i-4 m+2 v-4", "Alıcıların WhatsApp grubu alev aldı."]),
 
   S("Gece Dökümü",
-    "Belediye gündüz beton dökümünü trafik yüzünden yasakladı. Gece dökümde denetçi yok. {US}: 'Gece kimse bakmaz, vibratörü de çalıştırmayız, çabuk biter.'",
+    "Gündüz döküm yasak, gece denetçi yok. {US}: 'Gece kimse bakmaz, betonu sıkıştırmadan dökeriz, çabuk biter.'",
     "Vibratörsüz dökülen betonda boşluklar (segregasyon) oluşur; dayanım ciddi düşer. Döküm saatinden bağımsız olarak yapı denetim gözetimi zorunludur.",
     ["Denetçiyi gece dökümüne çağır, masrafını öde", "n-0.3 k+6", "Denetçi söylendi ama geldi. Her kolon vibratörle sıkıştırıldı."],
     ["Denetimsiz, hızlı dök", "n+0.4 k-10 v-6 p+4", "Sabah kalıplar söküldüğünde kolonun dibinde çakıl yuvaları vardı. Sıvacı çağrıldı."],
@@ -199,7 +199,7 @@ export const YENI_INSAAT = [
     ["Cepheyi sadece mantolama ve boya ile bitir", "n-0.2 k+2", "Sade ama güvenli."]),
 
   W({ q: "R:marmara" }, S("Sıvılaşma Riski",
-    "{SM}'da zemin kazısında su çıktı. Statikçi uyarıyor: 'Bu zeminde deprem sırasında sıvılaşma olur. 1999'da bu bölgede binalar böyle yan yattı.' Zemin iyileştirme bütçeyi sarsacak.",
+    "{SM}'da kazıda su çıktı. Statikçi: 'Depremde bu zemin sıvılaşır, binalar yan yatar.' Zemin iyileştirme pahalı.",
     "Marmara depreminde gevşek, suya doygun zeminlerde sıvılaşma nedeniyle binalar devrildi ve battı. Zemin iyileştirme (jet grout, taş kolon) ve doğru temel tasarımı bu riski azaltır.",
     ["Jet grout ile zemini iyileştir", "n-1.2 k+12 d+1 v+3", "Makineler bir ay çalıştı. Bina artık kayaya basıyor gibi."],
     ["Temeli biraz kalınlaştır, yeter", "n-0.3 k+2", "Yarım önlem. Statikçi imzalamadan önce iki kez düşündü."],
@@ -223,21 +223,21 @@ export const YENI_INSAAT = [
 // ---------- SATIŞ ----------
 export const YENI_SATIS = [
   W({ sp: ["reklamcı Oğuz", "AL", "Abicim, aciliyet satar. 'Son 3 daire!' yazdın mı, herkes koşar.", "📣", "istanbul"] }, S("Harç'ta %40 İndirim",
-    "Satışlar durgun. Reklamcı Oğuz fikir veriyor: 'Harç'ta reklam verelim: İlk 10 kişiye %40 indirim, sadece bugün! Kaporayı hemen IBAN'a yatırsınlar.' Oysa indirim yapacak durumun yok.",
+    "Satışlar durgun. Reklamcı Oğuz: 'Harç'ta ilan verelim: ilk 10 kişiye %40 indirim, kapora hemen IBAN'a!' Oysa indirim yapamazsın.",
     "Sosyal medyada 'son 3 daire', 'bugüne özel %40 indirim', 'hemen kapora yatırın' gibi baskı kuran ilanlar dolandırıcılığın klasik işaretidir. Kapora, noterde satış vaadi sözleşmesi yapılmadan ve firmanın resmi hesabı doğrulanmadan asla gönderilmemelidir.",
     ["Gerçek bir kampanya yap: şeffaf fiyat, noterde sözleşme", "o+6 i+2 v+2", "Satış yavaş ama iade talebi sıfır."],
     ["Sahte indirimle kapora topla", "n+1.5 o+12 v-12 r+6 m+3 F:sahteKampanya", "Bir günde 23 kapora geldi. İlk 10'u kim? Kimse bilmiyor."],
     ["Reklamı hiç verme", "", "Oğuz omuz silkti: 'Siz bilirsiniz, rakip veriyor.'"])),
 
   S("Sahte Hesap Senin Adına Satıyor",
-    "Harç'ta firmanın logosunu kopyalayan sahte bir hesap, 'yarı fiyatına daire' diye kapora topluyor. {AL} arıyor: 'Kaporamı yatırdım, ne zaman sözleşme yapıyoruz?'",
+    "Harç'ta logonu kopyalayan sahte hesap 'yarı fiyatına daire' diye kapora topluyor. {AL}: 'Kaporamı yatırdım, sözleşme ne zaman?'",
     "Dolandırıcılar gerçek firmaların adını ve logosunu kullanarak sahte ilanlar açabilir. Alıcılar ödemeyi yalnızca firmanın resmi şirket hesabına, sözleşme karşılığında yapmalı; ilanı firmanın bilinen telefonundan teyit etmelidir. Kişisel IBAN'a kapora istenmesi büyük bir alarmdır.",
     ["Suç duyurusunda bulun, herkesi resmi kanaldan uyar", "n-0.2 i+5 v+3", "Savcılık hesabı kapattırdı. Uyarı paylaşımın binlerce kez paylaşıldı."],
     ["'Bizimle ilgisi yok' de, uğraşma", "i-3 v-2", "Sahte hesap iki hafta daha kapora topladı. Mağdurlar senin kapına geliyor."],
     ["Mağdurların kaporasını indirimle projene say", "n-0.5 o+4 i+6 v+5", "Mağdurlar gerçek müşteriye dönüştü. Pahalı ama zarif bir hamle."]),
 
   S("Aynı Daire, İki Alıcı",
-    "{AL} elinde senetle kapıda: 'Bu daireyi ben aldım.' Arkasında başka bir aile, elinde tapu randevusu: 'Hayır, biz aldık.' Kasadaki para yetmiyor, ikisini de ödeyemezsin.",
+    "{AL} senetle kapıda: 'Bu daireyi ben aldım.' Arkasında başka bir aile: 'Hayır, biz aldık.' İkisine yetecek para yok.",
     "Mükerrer satış (aynı dairenin birden fazla kişiye satılması) dolandırıcılık suçudur. Alıcılar satış vaadi sözleşmesini noterde yapıp tapuya şerh ettirmelidir; şerh, dairenin başkasına satılmasını engeller. Senetle, adi yazılı sözleşmeyle ev alınmamalıdır.",
     ["Dairelerden birini ikinci aileye ver, farkı sen öde", "n-1.5 i+4 v+8 m-1", "İki aile de ev sahibi oldu. Sen biraz fakirleştin."],
     ["'Tapuda kimin adı varsa onundur' de", "i-6 v-10 r+8 m+2 F:mukerrer", "Senetli aile mahkemeye gitti. Haber mahallenin grubuna düştü."],
@@ -268,7 +268,7 @@ export const YENI_SATIS = [
 // ---------- TESLİM ----------
 export const YENI_TESLIM = [
   W({ sp: ["takipçi Cemil", "ME", "Abi bir tanıdık var, iskânı bir haftada çıkarır. Kimse kontrol etmez.", "🧾", "istanbul"] }, S("İskansız Anahtar: {PR}",
-    "{PR} bitti ama iskân çıkmadı: otopark eksik, sığınak depoya çevrilmiş. Alıcılar kirada, anahtar istiyor. Takipçi Cemil 'bir tanıdık var, iskânı bir haftada çıkarır' diyor.",
+    "{PR} bitti ama oturma izni çıkmadı: otopark eksik. Alıcılar anahtar istiyor. Takipçi Cemil: 'Tanıdık var, bir haftada çıkarır.'",
     "İskânı (yapı kullanma izin belgesi) olmayan binada kalıcı su, elektrik ve doğalgaz aboneliği yapılamaz; ev sahipleri kredi kullanamaz, satışta zorlanır. Sahte iskân belgesi kullanmak resmi belgede sahtecilik suçudur. Alıcılar iskânı e-Devlet üzerinden sorgulayabilir.",
     ["Eksikleri tamamla, iskânı gerçek yoldan al", "n-1 d+1 i+6 v+4 s+4", "İki ay sürdü. Doğalgaz bağlandığında bir teyze peteğe sarıldı."],
     ["Cemil'in 'iskân'ını al, anahtarları dağıt", "n-0.3 i+2 v-14 r+10 F:sahteIskan", "Belge çok resmi görünüyor. Numarası sistemde yok."],
@@ -285,7 +285,7 @@ export const YENI_TESLIM = [
 // ---------- GÜNDEM ----------
 export const YENI_GENEL = [
   W({ q: "Y:2018-2019" }, S("İmar Barışı",
-    "Kaçak katlara ve projeye aykırı yapılara belge veren 'imar barışı' çıktı. Eski projelerinde çatıya eklediğin katlar var. Bir başvuruyla hepsi 'yasal' olacak.",
+    "Kaçak katlara belge veren 'imar barışı' çıktı. Eski binalarına eklediğin katlar tek başvuruyla 'yasal' olacak.",
     "İmar affı belgesi, yapının depreme dayanıklı olduğu anlamına gelmez; yalnızca imar aykırılığını kayda alır. Alıcılar, 'imar barışından belge aldı' denen yapılarda mutlaka taşıyıcı sistemin incelenmesini istemelidir.",
     ["Başvur ama önce binaları güçlendir", "n-1 i+3 v+4 k+3", "Belge aldın; binalar da gerçekten sağlamlaştı."],
     ["Başvur, belgeyi al, güçlendirmeye gerek yok", "n-0.2 r-4 v-6", "Kâğıt temiz. Kolonlar aynı kolonlar."],

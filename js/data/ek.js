@@ -39,7 +39,7 @@ export const INSAAT_EK = [
     ["Görmezden gel; eksik demiri projeden kıs", "k-10 v-8 F:eksikDemir", "Eksik demir kâğıt üstünde kapandı. Kolonlarda kapanmadı."]),
 
   S("Makineler Rehin",
-    "Hakedişi üç aydır ödenmeyen taşeron {US}, şantiyenin kapısına kilit vurdu. Kule vinç ve beton pompası içeride. 'Paramı alana kadar kimse giremez' diyor.",
+    "Üç aydır parasını alamayan {US} şantiyeye kilit vurdu. Vinç ve pompa içeride: 'Paramı alana kadar kimse giremez.'",
     "Alacaklı taşeronlar hapis hakkı iddiasıyla şantiyeyi kilitleyebilir; bu durum hem gecikmeye hem de ek hukuki masrafa yol açar.",
     ["Borcu kapat", "n-1.5 e+12 v+3", "Kilit açıldı. Vinç yeniden dönüyor."],
     ["Bekçi ve 'birkaç arkadaş' gönder, kilidi kır", "r+8 e-10 v-8 i-4", "Kilit kırıldı. Görüntüler mahalle grubunda."],
@@ -102,7 +102,7 @@ export const INSAAT_EK = [
     ["Kayıtlı ve sigortalı çalıştır, ücretini tam ver", "n-0.2 e+2 v+4", "Yeni ekip çalışkan. Ustalar alıştı."]),
 
   S("Fenni Mesul İmza Parası",
-    "Şantiyenin fenni mesul mühendisi hiç şantiyeye gelmiyor, ayda bir imza için para alıyor. Bu hafta bir kat için döküm onayı lazım; {US} 'imzayı ben getiririm' diyor.",
+    "Sorumlu mühendis şantiyeye hiç gelmiyor, sadece imza parası alıyor. Döküm onayı lazım; {US}: 'İmzayı ben getiririm.'",
     "Fenni mesul mühendis şantiyede fiilen denetim yapmakla yükümlüdür. 'İmza mühendisliği' büyük depremlerden sonra yargılanan en yaygın ihmallerdendir.",
     ["Gerçekten gelip kontrol eden bir mühendis tut", "n-0.5 k+6 r-3 v+3", "Mühendis ilk gün üç kusur buldu."],
     ["İmza parası öde, devam", "n-0.1 r+4 v-3", "İmza geldi. Mühendis yine yok."],
@@ -160,7 +160,7 @@ export const YATIRIM_EK = [
     ["Senetle al, sonra 'kalite kötüydü' diye ödeme", "n+1.2 v-8 r+4 m+1", "Hacı Abi'nin oğlu dükkânı kapatmak zorunda kalabilir."]),
 
   S("Körfezli Yatırımcı",
-    "Emlakçı {YT} bir körfezli yatırımcı getirdi: 20 daireyi toptan alacak, ama ekspertiz raporunun gerçek değerin iki katı gösterilmesini istiyor. Vatandaşlık için.",
+    "{YT} yabancı bir alıcı getirdi: 20 daire alacak ama vatandaşlık için ekspertizde değerin iki katı yazılsın istiyor.",
     "Yabancılara konut satışında vatandaşlık eşiği için değerin şişirilmesi, hem vergi hem de sahtecilik soruşturmalarına konu olmuştur.",
     ["Gerçek değerden sat", "o+10 v+3", "Yatırımcı pazarlık etti ama aldı."],
     ["Ekspertizi şişirt", "o+25 n+1 r+8 v-8 x+1", "Vatandaşlık dosyası hazır. Ekspertiz uzmanı yeni araba aldı."],
@@ -188,7 +188,7 @@ export const YATIRIM_EK = [
     ["Arsa tapusu alındıktan sonra, şeffaf bir kooperatif kur", "y+1.5 g+4 v+2", "Üyeler her ay denetim raporu alıyor."]),
 
   S("Ev Sahibinin Kirası",
-    "Sözleşmeye göre arsa sahiplerine aylık kira yardımı ödüyorsun. Nakit sıkıştı. {AS} bu ayki kirayı bekliyor; kendi ev sahibi de onu çıkarmakla tehdit ediyor.",
+    "Arsa sahiplerine kira yardımı borçlusun ama kasa sıkışık. {AS} bu ayki kirayı bekliyor; ev sahibi onu çıkarmak üzere.",
     "Kat karşılığı sözleşmelerinde kira yardımının ödenmemesi, arsa sahiplerini kendi evleri yapılırken sokakta bırakabilir; sözleşmenin feshine gerekçe olabilir.",
     ["Öde", "n-0.3 s+6 v+2", "{AS} rahatladı."],
     ["İki ay geciktir", "n+0.3 s-12 v-5", "{AS} kirasını ödemek için kızından borç aldı."],
