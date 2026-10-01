@@ -10,11 +10,13 @@ const BETON_KIM = [
   () => sp("şantiye şefi Serkan", "istanbul", "US", "Abi pompacı acele ediyor, öğlene başka şantiyesi varmış. Şoför de hortumu miksere uzattı bile.", "👷"),
   () => sp("Mehmet Ali Usta", "dogu", "US", "Bıra, beton katı gelmiş, pompa zorlanıyor. Şoför 'iki kova su katarım, yağ gibi akar' diyor.", "👷"),
   () => sp("kalıpçı Nihat Usta", "ege", "US", "Gari bu beton ağır akıyo. Şoför 'biraz su verek' diyo, ben karışmam, sen bilin.", "👷"),
+  () => sp("demirci Bekir Usta", "adana", "US", "Gardaş demir bağlandı, mikser kapıda. Şoför 'suyu ben ayarlarım' diyo, ağam sen bi bak.", "👷"),
 ];
 const BETON_X = [
   "Hazır beton şoförü akıcı olsun diye mikserin içine gizlice su katmaya meraklı.",
   "Pompa operatörü acele ediyor; mikserler sırada bekliyor, şoför hortumu suya bağlamış.",
   "Hava sıcak, beton çabuk katılaşıyor. Herkes 'biraz su' diyor; kimse numune kabına bakmıyor.",
+  "Yapı denetimci geç kalacakmış; şoför 'o gelene kadar dökeriz' diyor.",
 ];
 const DENETIM = [
   { sp: () => sp("bekçi Hüsnü", "ic", "US", "Beyim! Aşağıdan beyaz bir araba geliyo, üstünde 'Çalışma ve Sosyal Güvenlik' yazıyo. Yirmi dakkaya burdalar!", "🚨"),
@@ -33,7 +35,7 @@ const TAPU_KIM = [
 export function betonCard(s, p) {
   return {
     kind: "sys", phase: "insaat", projId: p.id, title: "Beton Dökümü",
-    speaker: pickSeed(BETON_KIM, p.id)(),
+    speaker: pickSeed(BETON_KIM, p.id + Math.round(p.progress / 15))(),
     text: `${p.name}'da ${Math.max(1, Math.round(p.progress / 15))}. kat döşemesi dökülecek. ${pickSeed(BETON_X, p.id + s.t)} Su fazla olursa beton kolay akar ama dayanımı düşer.`,
     ders: "Betona şantiyede su katmak, dökümü kolaylaştırır ama dayanımı ciddi biçimde düşürür; deprem sonrası incelemelerde en sık rastlanan kusurlardan biridir. Döküm sırasında yapı denetim gözetiminde numune alınır; alıcılar ve arsa sahipleri bu test raporlarını isteyebilir.",
     choices: [

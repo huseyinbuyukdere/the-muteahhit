@@ -412,7 +412,9 @@ function showCard(c) {
     yuzKoy($('spEmoji'), sp, 'konus');
     $('spName').textContent = sp.name;
     // Şive etiketi yazı kalabalığı yapıyor; sadece üzerine gelince görünür
-    $('spMeta').textContent = sp.roleLabel || '';
+    const rol = sp.roleLabel || '';
+    // "Mehmet Ali Usta" + "Usta" gibi tekrarları gösterme
+    $('spMeta').textContent = rol && sp.name.toLocaleLowerCase('tr-TR').includes(rol.toLocaleLowerCase('tr-TR')) ? '' : rol;
     $('spMeta').title = sp.label || '';
     $('spQuote').textContent = `“${ek(sp.quote)}”`;
   }
