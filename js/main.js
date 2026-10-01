@@ -13,6 +13,7 @@ import { DIALECT_LABEL } from './data/dialect.js';
 import * as ROZ from './rozet.js';
 import { sonKarti } from './kart.js';
 import * as KAY from './kaydir.js';
+import { yuzKoy } from './yuz.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -390,7 +391,7 @@ function showCard(c) {
   const sp = c.speaker;
   $('speaker').classList.toggle('hidden', !sp);
   if (sp) {
-    $('spEmoji').textContent = sp.emoji || '🗣️';
+    yuzKoy($('spEmoji'), sp, 'konus');
     $('spName').textContent = sp.name;
     $('spMeta').textContent = [sp.roleLabel, sp.label].filter(Boolean).join(' · ');
     $('spQuote').textContent = `“${ek(sp.quote)}”`;
@@ -448,8 +449,11 @@ function doChoose(i, mini) {
   // Konuşan kişinin tepkisi (şivesiyle)
   const mood = res.deltas.reduce((a, [k, v]) => a + (k === 'v' ? v : k === 's' ? v * 0.7 : k === 'e' && c.speaker?.role === 'US' ? v : k === 'm' ? -v * 3 : 0), 0);
   const rx = c.kind === 'tpl' && c.speaker ? reactionFor(c.speaker, mood >= 0 ? 1 : -1, state.t + i) : null;
-  $('reaction').classList.toggle('hidden', !rx);
-  if (rx) { $('rxEmoji').textContent = c.speaker.emoji; $('rxQuote').innerHTML = `<b>${esc(c.speaker.name)}:</b> “${esc(rx)}”`; $('reaction').className = `speaker reaction ${mood >= 0 ? 'good' : 'bad'}`; }
+  // Konuşan kişinin yüzü seçime göre güler ya da kızar (yazı olmasa da)
+  const yuzVar = c.speaker && yuzKoy($('rxEmoji'), c.speaker, mood > 0.5 ? 'mutlu' : mood < -0.5 ? 'kizgin' : '');
+  $('reaction').className = `speaker reaction ${mood >= 0 ? 'good' : 'bad'}${rx || yuzVar ? '' : ' hidden'}`;
+  $('rxQuote').classList.toggle('hidden', !rx);
+  if (rx) $('rxQuote').innerHTML = `<b>${esc(c.speaker.name)}:</b> “${esc(rx)}”`;
   $('choices').classList.add('hidden');
   $('card').classList.add('secildi');
   $('secim').textContent = `➜ ${ek(c.choices[i].label)}`;
