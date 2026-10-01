@@ -709,6 +709,12 @@ function showEnding() {
     <p class="bir-tur">Rozetler: <b>${Object.keys(ROZ.kazanilan()).length}/${ROZ.ROZETLER.length}</b> · Sonlar: <b>${gorulen}/${Object.keys(E.ENDINGS).length}</b>${oner ? `<br>Sıradaki rozet: ${oner.emoji} <b>${esc(oner.ad)}</b> — ${esc(oner.nasil)}` : ''}</p>
     <div class="stat-grid">${kutu(stats)}</div>
     <details class="stat-diger"><summary>Bütün rakamlar</summary><div class="stat-grid">${kutu(digerStats)}</div></details>
+    <details class="stat-diger kontrol5"><summary>🏠 Ev alırken 5 kontrol</summary><ol>
+      <li>Tapu kaydını e-Devlet'ten kendin bak: ipotek, haciz, şerh var mı?</li>
+      <li>Yapı ruhsatını ve iskân belgesini belediyeden doğrula.</li>
+      <li>Satış vaadi sözleşmesini noterde yap, tapuya şerh ettir.</li>
+      <li>Parayı işin ilerlemesine göre öde; peşin toplu para verme.</li>
+      <li>Müteahhidin eski binalarını gez, hakkındaki davaları araştır.</li></ol></details>
     <p class="disclaimer">Oyundaki her yöntemin gerçek hayattaki karşılığını ve nasıl korunacağınızı Farkındalık Rehberi'nde bulabilirsiniz.</p></div>`;
   $('ending').classList.remove('hidden');
 }

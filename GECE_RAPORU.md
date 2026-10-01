@@ -8,6 +8,7 @@
 - **Daha az yazı:** En uzun 27 kart kısaldı. Giriş kartı ve "Nasıl Oynanır" sadeleşti. Oyun sonunda 6 ana rakam var, gerisi "Bütün rakamlar"ın altında.
 - **Telefonda kamera:** Kart hangi binadan bahsediyorsa kamera ona dönüyor. Bina kartın üstündeki boşlukta tam görünüyor.
 - **Oyun sonu:** Her sonda "Gerçek hayatta" notu var. Kötü sonlarda nasıl korunacağın, iyi sonlarda sağlam müteahhidi nasıl tanıyacağın yazıyor.
+- **Ev alırken 5 kontrol:** Oyun sonunda kapalı duran kısa bir liste; tıklayınca açılıyor.
 - **Küçük düzeltmeler:**
   - Teslim manşetleri artık hep aynı değil.
   - Zayıf binalar depremden şansla çıkınca gazete övmüyor, uyarıyor.
@@ -30,7 +31,6 @@
 
 ## Sonraki fikirler
 - Gazete manşetlerine iyi haber çeşitleri (ödül, kampanya, mağdura yardım).
-- Oyun sonunda "ev alırken 5 kontrol" gibi kısa bir kontrol listesi.
 
 ---
 

@@ -554,3 +554,6 @@ body.cine::before, body.cine::after { height: 7vh; }
 .tp-memur { display: flex; align-items: center; gap: 8px; }
 .tp-memur > .avatar { flex: 0 0 46px; height: 46px; }
 .tp-memur > .bubble-s { flex: 1; margin: 0; }
+.kontrol5 ol { margin: 8px 0 0; padding-left: 22px; text-align: left; font-size: 14px; line-height: 1.45; }
+.kontrol5 li { margin-bottom: 4px; }
+.kontrol5 summary { color: var(--yellow); font-weight: 700; font-size: 14px; }
