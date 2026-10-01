@@ -345,9 +345,9 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .shake { display: inline-block; animation: shake .4s; }
 @keyframes shake { 25% { transform: translateX(-6px) rotate(-4deg); } 75% { transform: translateX(6px) rotate(4deg); } }
-.beton .zone { position: relative; height: 8px; margin: -4px 8px 4px; }
+.beton .zone { position: relative; height: 8px; margin: -4px 8px 16px; }
 .beton .zone i { position: absolute; top: 0; height: 100%; background: rgba(70,167,88,.55); border-radius: 4px; }
-.beton .zone small { position: absolute; right: 0; top: 8px; font-size: 10px; color: var(--muted); }
+.beton .zone small { position: absolute; left: 50%; top: 9px; transform: translateX(-50%); white-space: nowrap; font-size: 10px; color: #6fcf7f; }
 .beton .gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; font-size: 12px; }
 .site .car-track { position: relative; height: 30px; border-bottom: 2px dashed rgba(255,255,255,.2); margin-bottom: 10px; font-size: 22px; display: flex; justify-content: flex-end; }
 .site .car-track #tCar { position: absolute; left: 0; transform: scaleX(-1); transition: left .1s linear; }

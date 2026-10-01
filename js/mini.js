@@ -57,7 +57,7 @@ const GAMES = {
           <div class="bubble-s" id="bSay">Şoför: "Abi biraz su katayım mı, kolay aksın?"</div>
           <label class="ratio">Su / çimento: <b id="bVal"></b></label>
           <input type="range" id="bSl" min="30" max="85" value="${w * 100}" step="1">
-          <div class="zone"><i style="left:${(40 - 30) / 55 * 100}%;width:${10 / 55 * 100}%"></i><small>şartname</small></div>
+          <div class="zone"><i style="left:${(40 - 30) / 55 * 100}%;width:${10 / 55 * 100}%"><small>şartname</small></i></div>
           <div class="gauges">
             <div><small>💪 Dayanım</small><div class="g"><i id="bStr"></i></div></div>
             <div><small>🌊 Akışkanlık</small><div class="g"><i id="bFlow"></i></div></div>
