@@ -20,6 +20,9 @@ const SON = {
   emekli: ['USTA MÜTEAHHİT EMEKLİYE AYRILDI', 'Arkasında yıllarca ayakta kalacak binalar bıraktı', 'iyi'],
 };
 
+// Kötü sonların korunma notu (son ekranında da gösterilir)
+export const sonDers = (k) => SON[k]?.[3] || null;
+
 // Sonuçtan manşet çıkar; yoksa null
 export function manset(s, c, res) {
   if (s.ending && SON[s.ending]) {
@@ -37,7 +40,9 @@ export function manset(s, c, res) {
       const p = q.damaged[0];
       return { baslik: BUYUK(`${p.semt}'da bina hasar aldı`), alt: 'Sakinler tahliye edildi; binada çatlaklar var', ton: 'kotu', ders: 'Binanda çatlak varsa belediyeden ya da üniversiteden bağımsız inceleme iste.', foto: 'catlak' };
     }
-    if (s.projects.some((p) => p.done && !p.collapsed)) return { baslik: 'DEPREMDE AYAKTA KALDI', alt: `${s.firma || 'Firmanın'} binalarında tek çatlak yok. Sağlam yapmanın karşılığı.`, ton: 'iyi', foto: 'bina' };
+    const ayakta = s.projects.filter((p) => p.done && !p.collapsed);
+    if (ayakta.some((p) => (p.kalite ?? 100) < 50)) return { baslik: 'DEPREM UCUZ ATLATILDI', alt: `${s.firma || 'Firmanın'} zayıf binaları bu sefer şans eseri ayakta kaldı`, ton: 'gri', ders: 'Bir depremden sağ çıkan bina sağlam demek değildir; sonraki depremde çökebilir. Bağımsız inceleme yaptır.', foto: 'catlak' };
+    if (ayakta.length) return { baslik: 'DEPREMDE AYAKTA KALDI', alt: `${s.firma || 'Firmanın'} binalarında tek çatlak yok. Sağlam yapmanın karşılığı.`, ton: 'iyi', foto: 'bina' };
     return null;
   }
   const ifsa = res.events.find((e) => e[0] === 'linc' && e[1].startsWith('📸'));

@@ -546,3 +546,4 @@ body.cine::before, body.cine::after { height: 7vh; }
 /* Kart başı tek satır: etiket kırılmaz, proje adı sığmazsa üç noktayla kısalır */
 .card-head .tag { white-space: nowrap; flex: 0 0 auto; }
 .card-head .proj { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.son-ders { margin: 10px 0; padding: 8px 10px; text-align: left; font-size: 14px; line-height: 1.4; background: rgba(240, 180, 40, .1); border-left: 4px solid #e0a020; border-radius: 6px; }
