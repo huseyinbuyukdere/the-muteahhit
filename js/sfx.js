@@ -48,6 +48,7 @@ export function play(name) {
     else if (name === 'goal') { [784, 988, 1175].forEach((f, i) => tone(f, 0.18, { type: 'square', vol: 0.04, delay: i * 0.08 })); }
     else if (name === 'plane') { noise(3, 0.15, 900); tone(140, 2.8, { type: 'sawtooth', vol: 0.03, slide: 200 }); }
     else if (name === 'siren') { for (let i = 0; i < 4; i++) { tone(700, 0.35, { type: 'square', vol: 0.03, delay: i * 0.7, slide: 250 }); tone(950, 0.35, { type: 'square', vol: 0.03, delay: i * 0.7 + 0.35, slide: -250 }); } }
+    else if (name === 'gazete') { noise(0.35, 0.18, 2400); tone(330, 0.12, { type: 'triangle', vol: 0.05, delay: 0.32 }); }
     else if (name === 'dice') { for (let i = 0; i < 6; i++) tone(400 + Math.random() * 600, 0.04, { type: 'triangle', vol: 0.04, delay: i * 0.06 }); }
   } catch { /* ses yoksa oyun devam */ }
 }

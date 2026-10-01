@@ -14,10 +14,11 @@ import * as ROZ from './rozet.js';
 import { sonKarti } from './kart.js';
 import * as KAY from './kaydir.js';
 import { yuzKoy } from './yuz.js';
+import * as GZ from './gazete.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-let state = null, card = null, mode = 'choose', sceneOk = false;
+let state = null, card = null, mode = 'choose', sceneOk = false, bekleyenManset = null;
 
 const STATS = [
   ['i', 'İtibar', '#46a758', false], ['g', 'Yatırımcı', '#3e8ed0', false], ['e', 'Ekip', '#f4c20d', false],
@@ -76,6 +77,7 @@ function boot() {
 }
 
 function startGame(resume) {
+  bekleyenManset = null; GZ.kapat(false);
   $('start').classList.add('hidden');
   $('hud').classList.remove('hidden');
   const saved = resume ? E.load() : null;
@@ -503,6 +505,7 @@ function doChoose(i, mini) {
     } else S3.sync(state);
     if (state.ending === 'kacak' || state.ending === 'iade') { S3.flyPlane(); S3.cinematic('kacis'); }
   }
+  bekleyenManset = GZ.manset(state, c, res);
   delete state.lastQuake;
   render();
   for (const [k] of STATS) if (Math.round(before[k]) !== Math.round(state[k])) { const el = $(`st-${k}`); if (el) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); } }
@@ -591,8 +594,15 @@ function eventLine(e) {
   return `<li>📌 ${esc(v)}</li>`;
 }
 
+// Önemli olayda Devam'a basınca önce gazete manşeti gelir
 function next() {
-  if (mode !== 'result') return;
+  if (mode !== 'result' || GZ.acikMi()) return;
+  if (bekleyenManset) {
+    const m = bekleyenManset; bekleyenManset = null;
+    GZ.goster(m, E.dateLabel(state.t), next);
+    SFX.play('gazete');
+    return;
+  }
   if (state.ending) return showEnding();
   showCard(E.drawCard(state));
 }
@@ -612,6 +622,7 @@ function askFlee() {
 }
 
 function onKey(e) {
+  if (GZ.tus(e)) return;
   if (e.key === 'Escape' && PHONE.isOpen()) return PHONE.close();
   if (e.key === 'Escape') hidePick();
   if (PHONE.isOpen()) return;
