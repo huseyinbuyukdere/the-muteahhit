@@ -49,7 +49,7 @@ export function kontrol(s, ending = null, gorulen = 0) {
 // "Bir tur daha" için: henüz kazanılmamış, ulaşılabilir bir sonraki hedef
 export function oneri(s) {
   const k = kazanilan();
-  const baslaOner = ["kalfaPatron", "usta", "baba", "damat"].map((id) => ROZETLER.find((r) => r.id === id)).find((r) => !k[r.id]);
   const diger = ROZETLER.filter((r) => !k[r.id]);
-  return baslaOner || diger[0] || null;
+  // Her oyun sonunda aynı rozeti önermemek için kariyer süresine göre sırayla seç
+  return diger.length ? diger[(s?.t || 0) % diger.length] : null;
 }
