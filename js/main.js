@@ -463,7 +463,8 @@ function doChoose(i, mini) {
   if (!state.ending) for (const r of ROZ.kontrol(state)) { (state.rozetler ||= []).push(r.id); toast(`${r.emoji} Rozet kazandın: ${r.ad}`, 'rozetT'); SFX.play('goal'); }
   $('events').innerHTML = res.events.filter((e) => e[0] !== 'faiz').map(eventLine).join('');
   $('ders').innerHTML = dersHtml(c.ders, res.deltas);
-  damga(res, mini);
+  const dm = damga(res, mini);
+  sahneTepki(c, dm);
   $('ders').classList.toggle('hidden', !c.ders);
   $('devamBtn').textContent = state.ending ? 'Sonu gör ▸' : 'Devam ▸';
   // Sıradaki ayın merak uyandıran fragmanı
@@ -537,12 +538,23 @@ function damga(res, mini) {
   else if ((d.v || 0) >= 3) { t = 'TEMİZ İŞ'; cls = 'yesil'; }
   else if ((d.n || 0) > 0.5) { t = 'KÂRLI'; cls = 'sari'; }
   el.className = 'damga hidden';
-  if (!t) return;
+  if (!t) return null;
   el.textContent = t; void el.offsetWidth;
   el.className = `damga ${cls}`;
   // Ekran kenarında kısa bir renk parlaması
   const f = $('parilti');
   if (f && cls !== 'sari') { f.className = ''; void f.offsetWidth; f.className = cls; }
+  return { t, cls };
+}
+
+// Seçime göre 3B sahnede anlık tepki: kirli işte binada çatlak ve toz, temiz işte işçiler sevinir
+function sahneTepki(c, dm) {
+  if (!sceneOk || !dm || c.quake) return;
+  const kind = dm.cls === 'kirmizi' ? 'kirli' : dm.cls === 'yesil' ? 'temiz' : dm.t === 'KÂRLI' || dm.t === 'TUTTU' ? 'para' : null;
+  if (!kind) return;
+  const proj = c.projId != null ? state.projects.find((p) => p.id === c.projId && !p.collapsed && p.slot >= 0) : null;
+  if (proj) S3.focus(proj);
+  setTimeout(() => S3.tepki(kind, proj ? proj.id : null), proj ? 350 : 0);
 }
 
 function deltaChips(deltas) {

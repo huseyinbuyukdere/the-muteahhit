@@ -110,7 +110,10 @@ function resize() {
   const el = renderer.domElement;
   const w = el.clientWidth || window.innerWidth, h = el.clientHeight || window.innerHeight;
   renderer.setSize(w, h, false);
-  camera.aspect = w / h; camera.updateProjectionMatrix();
+  camera.aspect = w / h;
+  // Kart ekranın altını kapatır: sahnenin merkezini yukarı kaydır ki odaklanan bina kartın üstünde görünsün
+  camera.setViewOffset(w, h, 0, h * (w <= 860 && h > w ? 0.17 : 0.15), w, h);
+  camera.updateProjectionMatrix();
 }
 
 function buildWorld() {
@@ -255,6 +258,10 @@ function buildProject(p) {
   g.position.copy(pos);
   const S = SIZES[p.tier];
   g.userData.cranes = [];
+  // Seçime tepki (çatlak) için binanın ön yüzü
+  const bx0 = S.blocks[S.blocks.length - 1];
+  g.userData.yuz = p.phase === 'arsa' ? { x: -1, z: 0, w: 4, d: 3.5, h: 2.4 } : p.phase === 'yatirim' || p.collapsed ? null
+    : { x: bx0[0], z: bx0[1], w: S.w, d: S.d, h: (p.phase === 'insaat' ? Math.max(1, Math.ceil((p.progress / 100) * p.floors)) : p.floors) * FLOOR_H + (p.phase === 'insaat' ? FLOOR_H : 0.3) };
   if (p.collapsed) {
     const rm = [mat('#8a8378'), mat('#6d675e'), mat('#a39a8a')];
     for (let i = 0; i < 70; i++) {
@@ -626,6 +633,7 @@ function syncEnv(st) {
 function tickLife(dt, t) {
   for (const w of workers) {
     const u = w.userData;
+    if (u.cheer > 0) { sevin(w, u, dt, t); continue; }
     if (u.work > 0) {
       u.work -= dt;
       u.arms[1].rotation.x = -1.2 + Math.sin(t * 9) * 0.6;
@@ -988,6 +996,7 @@ function tick() {
   for (const cl of clouds) { cl.position.x += cl.userData.v * dt; if (cl.position.x > 170) cl.position.x = -170; }
   for (const r of rotors) r.rotation.y += dt * 18;
   tickLife(dt, t);
+  tickTepki(dt, t);
   if (yacht) { yacht.position.y = 0.2 + Math.sin(t * 1.3) * 0.15; yacht.rotation.z = Math.sin(t * 0.9) * 0.03; }
   if (seaMesh) seaMesh.position.y = 0.08 + Math.sin(t * 0.8) * 0.05;
   for (let i = particles.length - 1; i >= 0; i--) {
@@ -1051,3 +1060,93 @@ export function _screenOf(kind) {
   const v = new THREE.Vector3(); o.getWorldPosition(v); v.y += 0.6; v.project(camera);
   return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height, pick: pickAt(r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height) };
 }
+
+// ---------- Seçime anlık tepki: kirli işte çatlak ve toz, temiz işte sevinen işçiler ----------
+let tepkiler = [], sevinenler = [];
+const CATLAK_M = new THREE.MeshBasicMaterial({ color: '#141414', transparent: true });
+function sevin(w, u, dt, t) {
+  u.cheer -= dt;
+  const ph = t * 11 + (u.n || 0) * 1.7;
+  w.position.y = Math.abs(Math.sin(ph)) * 0.45;
+  u.arms[0].rotation.x = -2.7 + Math.sin(ph * 0.5) * 0.35; u.arms[1].rotation.x = -2.7 - Math.sin(ph * 0.5) * 0.35;
+  u.arms[0].rotation.z = -0.3; u.arms[1].rotation.z = 0.3;
+  u.legs[0].rotation.x = u.legs[1].rotation.x = 0;
+  if (u.cheer <= 0) { w.position.y = 0; u.arms[0].rotation.set(0, 0, 0); u.arms[1].rotation.set(0, 0, 0); }
+}
+function catlak(g, f) {
+  // Ön ve yan yüzde yukarıdan aşağı inen zikzak çatlaklar
+  const grp = new THREE.Group();
+  const seg = [];
+  for (const yon of [0, 1]) {
+    let x = rand(-f.w * 0.3, f.w * 0.3), y = f.h * rand(0.75, 0.95);
+    const n = Math.max(4, Math.min(12, Math.round(f.h / 0.7)));
+    for (let i = 0; i < n; i++) {
+      const nx = Math.max(-f.w * 0.45, Math.min(f.w * 0.45, x + rand(-0.6, 0.6))), ny = y - rand(0.35, 0.8);
+      if (ny < 0.4) break;
+      const len = Math.hypot(nx - x, ny - y);
+      const m = new THREE.Mesh(new THREE.BoxGeometry(0.15, len, 0.06), CATLAK_M);
+      const mx = (x + nx) / 2, my = (y + ny) / 2, ang = Math.atan2(nx - x, y - ny);
+      if (yon === 0) { m.position.set(f.x + mx, my, f.z + f.d / 2 + 0.05); m.rotation.z = ang; }
+      else { m.position.set(f.x + f.w / 2 + 0.05, my, f.z - mx); m.rotation.x = -ang; }
+      m.visible = false; grp.add(m); seg.push({ m, at: i * 0.07 });
+      x = nx; y = ny;
+    }
+  }
+  g.add(grp);
+  return { grp, seg };
+}
+export function tepki(kind, projId) {
+  if (!scene) return;
+  const g = projId != null ? groups.get(projId) : null;
+  const base = g ? g.position.clone() : cell(RESERVED.ofis);
+  const f = g && g.userData.yuz;
+  const top = f ? f.h : 3;
+  if (kind === 'kirli') {
+    burst(base.clone().add(new THREE.Vector3(rand(-2, 2), 0.8, 4)), ['#8c7a62', '#a39580', '#6e6253'], LOW ? 50 : 110, 3.5, 2.4, -0.25, 1);
+    if (f) {
+      const c = catlak(g, f);
+      tepkiler.push({ t: 0, life: 5.5, g, ...c, titre: 0.7 });
+      setTimeout(() => burst(base.clone().add(new THREE.Vector3(f.x + f.w / 2, top * 0.6, f.z + f.d / 2)), ['#c9c3b8', '#9a938a'], LOW ? 25 : 50, 2, 1.6, 3, 0.5), 350);
+    }
+    // İşçiler bir an durup başını iki yana sallar
+    for (const w of workers) if (g && isChildOf(w, g)) { w.userData.work = 1.6; }
+  } else if (kind === 'temiz' || kind === 'para') {
+    const renk = kind === 'para' ? ['#ffd34d', '#f4c20d', '#fff1a8'] : ['#46a758', '#f4c20d', '#ffffff', '#3e8ed0'];
+    burst(base.clone().add(new THREE.Vector3(0, top + 2.5, 0)), renk, LOW ? 50 : 100, 6, 1.7, 4, 0.42);
+    if (kind === 'para') return;
+    const bizim = g ? workers.filter((w) => isChildOf(w, g)) : [];
+    if (bizim.length) bizim.forEach((w, i) => { w.userData.cheer = 2.6; w.userData.n = i; });
+    else {
+      // İşçi yoksa binanın (ya da ofisin) önüne birkaç kişi çıkıp sevinir
+      const renkler = ['#3e8ed0', '#c0573a', '#7a5bbf', '#2e7d5b'];
+      for (let i = 0; i < 4; i++) {
+        const fg = figure({ body: renkler[i], helmet: g ? '#f4c20d' : null, skin: ['#d9a77c', '#b98563', '#e8c39e'][i % 3] });
+        fg.position.copy(base).add(new THREE.Vector3(-2.4 + i * 1.6, 0, 5.4 + (i % 2) * 0.6));
+        fg.rotation.y = 0.35;
+        fg.userData = { ...fg.userData, cheer: 2.8, n: i };
+        scene.add(fg); sevinenler.push(fg);
+      }
+    }
+  }
+}
+function tickTepki(dt, t) {
+  for (let i = tepkiler.length - 1; i >= 0; i--) {
+    const r = tepkiler[i]; r.t += dt;
+    for (const s of r.seg) if (!s.m.visible && r.t >= s.at) s.m.visible = true;
+    if (r.titre > 0) { r.titre -= dt; r.g.rotation.z = Math.sin(t * 45) * 0.012 * Math.max(0, r.titre); if (r.titre <= 0) r.g.rotation.z = 0; }
+    const fade = r.t > r.life - 1 ? Math.max(0, r.life - r.t) : 1;
+    for (const s of r.seg) s.m.scale.x = fade;
+    if (r.t >= r.life || !r.g.parent) {
+      r.g.remove(r.grp); r.grp.traverse((o) => o.geometry && o.geometry.dispose());
+      if (r.g.parent) r.g.rotation.z = 0;
+      tepkiler.splice(i, 1);
+    }
+  }
+  for (let i = sevinenler.length - 1; i >= 0; i--) {
+    const w = sevinenler[i], u = w.userData;
+    if (u.cheer > 0) sevin(w, u, dt, t);
+    else { scene.remove(w); sevinenler.splice(i, 1); }
+  }
+}
+// Test yardımcısı: kamera durumu
+export function _cam() { return { cam: camera.position.toArray().map(Math.round), tgt: controls.target.toArray().map(Math.round), ft: focusTarget && focusTarget.toArray(), cine: !!cine, ar: controls.autoRotate }; }
