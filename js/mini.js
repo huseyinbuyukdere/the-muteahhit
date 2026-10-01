@@ -222,6 +222,7 @@ const GAMES = {
         <div class="bubble-s" id="hSay">Sıra ilerliyor…</div><div class="hv-q" id="hQ"></div>
         <button class="primary big" id="hBreath">😮‍💨 Derin nefes</button></div>`;
       const draw = () => {
+        bpm = clamp(bpm, 60, 190);
         $('hBpm').textContent = Math.round(bpm);
         const f = clamp((bpm - 50) / 110, 0, 1);
         $('hBar').style.width = `${f * 100}%`;
@@ -243,7 +244,7 @@ const GAMES = {
       every(2600, () => { if (Math.random() < 0.7) { bpm += 10 + Math.random() * 10; $('hSay').textContent = EVT[Math.floor(Math.random() * EVT.length)]; } });
       const ask = (k) => {
         const [q, opts, right] = Q[k];
-        $('hQ').innerHTML = `<b>👮 ${q}</b>` + opts.map((o, i) => `<button data-i="${i}">${esc(o)}</button>`).join('');
+        $('hQ').innerHTML = `<b>👮 ${q}</b>` + opts.map((o, i) => [o, i]).sort(() => Math.random() - 0.5).map(([o, i]) => `<button data-i="${i}">${esc(o)}</button>`).join('');
         $('hQ').querySelectorAll('button').forEach((b) => (b.onclick = () => { answered++; if (+b.dataset.i !== right) { bad++; bpm += 20; } else bpm -= 5; $('hQ').innerHTML = ''; draw(); }));
       };
       later(4500, () => ask(0));
