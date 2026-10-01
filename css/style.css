@@ -543,3 +543,6 @@ body.cine::before, body.cine::after { height: 7vh; }
 .nasil-liste { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 8px; }
 .nasil-liste li { background: var(--panel2); border-radius: 10px; padding: 9px 12px; line-height: 1.4; }
 .pz-man > .avatar.yuz { width: 64px; height: 64px; flex: 0 0 64px; font-size: 0; }
+/* Kart başı tek satır: etiket kırılmaz, proje adı sığmazsa üç noktayla kısalır */
+.card-head .tag { white-space: nowrap; flex: 0 0 auto; }
+.card-head .proj { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

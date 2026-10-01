@@ -1048,7 +1048,9 @@ function tick() {
   const inCine = tickCine(dt);
   if (focusTarget && !inCine) {
     controls.target.lerp(focusTarget, 1 - Math.exp(-dt * 3.2));
-    const desired = focusTarget.clone().add(FOCUS_OFF);
+    // Telefonda sahnenin görünen kısmı dar: binanın tamamı sığsın diye biraz geri çekil
+    const el = renderer.domElement, dik = el.clientHeight > el.clientWidth * 1.3;
+    const desired = focusTarget.clone().addScaledVector(FOCUS_OFF, dik ? 1.35 : 1);
     camera.position.lerp(desired, 1 - Math.exp(-dt * 2.2));
     if (camera.position.distanceTo(desired) < 0.5) focusTarget = null;
   }
