@@ -195,14 +195,18 @@ const GAMES = {
       const docs = DOC.slice().sort(() => Math.random() - 0.5);
       let got = 0, wrong = 0, sira = 12;
       el.innerHTML = `<div class="tp"><div class="tp-q"><div><small>Ekrandaki numara</small><b id="tNow">A-0${49}</b></div><div><small>Senin numaran</small><b>A-061</b></div></div>
-        <div class="tp-desk" id="tDesk"></div><div class="tp-folder" id="tFold">📁 Dosya: <b id="tGot">0</b>/5</div><div class="bubble-s" id="tSay">Memur: "Evraklar tam mı? Eksik varsa sıranız yanar."</div></div>`;
+        <div class="tp-desk" id="tDesk"></div><div class="tp-folder" id="tFold">📁 Dosya: <b id="tGot">0</b>/5</div><div class="tp-memur"><span id="tYuz" class="avatar">🧑‍💼</span><div class="bubble-s" id="tSay">Memur: "Evraklar tam mı? Eksik varsa sıranız yanar."</div></div></div>`;
+      // Memurun yüzü: doğru evrakta konuşur, yanlışta kızar, dosya tamamlanınca güler
+      const memur = { name: 'tapu memuru', role: 'ME', emoji: '💼', quote: 'Evraklar tam mı? Eksik varsa sıranız yanar.' };
+      yuzKoy($('tYuz'), memur, 'konus');
+      const myz = (f) => { if ($('tYuz').classList.contains('yuz')) ifadeVer($('tYuz'), f); };
       docs.forEach(([ic, ad, ok]) => {
         const b = document.createElement('button'); b.className = 'doc'; b.innerHTML = `<span>${ic}</span><small>${esc(ad)}</small>`;
         b.onclick = () => {
           if (b.disabled) return;
           if (ok === 2) { b.disabled = true; $('tSay').textContent = 'Takipçi: "Tamam abi, seni hemen içeri alıyorum…" (Bu rüşvet.)'; later(700, () => finish(0.7, { fx: 'v-4 r+3', note: 'Zarfla sıra atladın. Bunun da bir kaydı var.' })); return; }
-          if (ok === 1) { got++; b.disabled = true; b.classList.add('got'); $('tGot').textContent = got; sfx('click'); if (got >= 5) finish(clamp(1 - wrong * 0.12 - Math.max(0, 6 - sira) * 0.03, 0.4, 1), { note: 'Evrak tam, işlem tamam.' }); }
-          else { wrong++; b.disabled = true; b.classList.add('bad'); $('tSay').textContent = `Memur: "${ad} mı? Bu olmaz, doğru evrakı getirin."`; sfx('bad'); sira = Math.max(0, sira - 2); }
+          if (ok === 1) { got++; b.disabled = true; b.classList.add('got'); $('tGot').textContent = got; sfx('click'); myz(got >= 5 ? 'mutlu' : 'konus'); if (got >= 5) finish(clamp(1 - wrong * 0.12 - Math.max(0, 6 - sira) * 0.03, 0.4, 1), { note: 'Evrak tam, işlem tamam.' }); }
+          else { wrong++; b.disabled = true; b.classList.add('bad'); $('tSay').textContent = `Memur: "${ad} mı? Bu olmaz, doğru evrakı getirin."`; sfx('bad'); myz('kizgin'); sira = Math.max(0, sira - 2); }
         };
         $('tDesk').appendChild(b);
       });

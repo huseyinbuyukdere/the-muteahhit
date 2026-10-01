@@ -16,14 +16,13 @@
   - Denetim oyununda tehlikenin adı karenin altında yazıyor ("Baret yok" gibi).
   - Havalimanında nabız 300'e çıkmıyor, polisin sorusunda doğru cevap hep ilk sırada değil.
   - "Sıradaki rozet" önerisi her oyunda değişiyor.
-  - Havalimanında polisin de çizim yüzü var; kötü cevapta kaşlarını çatıyor.
+  - Havalimanında polisin, tapuda memurun da çizim yüzü var; yanlışta kızıyorlar.
 
 ## Denge (Gece 2)
 - Kurallar değişmedi. Dürüst oyuncunun iflas oranı %9–15 arasında, çoğunlukla saygın patron oluyor.
 - Dolandırıcının yaklaşık yarısı kaçıyor, kalanlar yakalanıyor, kovuluyor ya da siyasete giriyor. Her zaman kazanmıyor. Kaçan da arkasında yüzlerce mağdur bırakıyor ve bu son ekranında görünüyor.
 
 ## Yarım kalanlar
-- Tapu mini oyununda memur hâlâ yazıyla konuşuyor, yüzü yok.
 - Ek düzeltici yabancı kökenli bazı isimlerde yanlış ek çıkarabilir.
 
 ## Bilinen hatalar
@@ -32,7 +31,6 @@
 ## Sonraki fikirler
 - Gazete manşetlerine iyi haber çeşitleri (ödül, kampanya, mağdura yardım).
 - Oyun sonunda "ev alırken 5 kontrol" gibi kısa bir kontrol listesi.
-- Tapu mini oyununda memura çizim yüz.
 
 ---
 
