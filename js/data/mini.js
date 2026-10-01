@@ -50,7 +50,7 @@ export function betonCard(s, p) {
 }
 
 export function denetimCard(s, p) {
-  const d = pickSeed(DENETIM, p.id);
+  const d = pickSeed(DENETIM, p.id + (s.t || 0));
   return {
     kind: "sys", phase: "insaat", projId: p.id, title: "Müfettiş Yolda",
     speaker: d.sp(),
