@@ -2,7 +2,7 @@
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
-import { yuzKoy } from './yuz.js';
+import { yuzKoy, ifadeVer } from './yuz.js';
 let sfx = () => {};
 let timers = [];
 const every = (ms, f) => { const id = setInterval(f, ms); timers.push(id); return id; };
@@ -217,12 +217,18 @@ const GAMES = {
     how: '"Derin nefes" düğmesiyle nabzını yeşil bölgede tut. Polis soru sorarsa sakin bir cevap seç.',
     start(el, ctx, finish) {
       let bpm = 95, inZone = 0, ticks = 0, answered = 0, bad = 0;
-      el.innerHTML = `<div class="hv"><div class="hv-line" id="hLine">🧍🧍🧍<b>🧍‍♂️</b>🧍 → 👮</div>
+      el.innerHTML = `<div class="hv"><div class="hv-line"><span id="hLine">🧍🧍🧍<b>🧍‍♂️</b></span> → <span id="hPolis" class="avatar">👮</span></div>
         <div class="hv-bpm"><small>Nabız</small><b id="hBpm">95</b><div class="g"><i id="hBar"></i><em></em></div></div>
         <div class="bubble-s" id="hSay">Sıra ilerliyor…</div><div class="hv-q" id="hQ"></div>
         <button class="primary big" id="hBreath">😮‍💨 Derin nefes</button></div>`;
+      // Polisin yüzü: soru sorarken konuşur, kötü cevapta ya da nabız fırlayınca kaşlarını çatar
+      const polis = { name: 'pasaport polisi', role: 'PO', emoji: '👮', quote: 'Pasaport lütfen' };
+      yuzKoy($('hPolis'), polis);
+      const pyz = (f) => { if ($('hPolis').classList.contains('yuz')) ifadeVer($('hPolis'), f); };
+      let supheli = false;
       const draw = () => {
         bpm = clamp(bpm, 60, 190);
+        if ((bpm >= 135) !== supheli) { supheli = bpm >= 135; pyz(supheli ? 'kizgin' : ''); }
         $('hBpm').textContent = Math.round(bpm);
         const f = clamp((bpm - 50) / 110, 0, 1);
         $('hBar').style.width = `${f * 100}%`;
@@ -244,13 +250,14 @@ const GAMES = {
       every(2600, () => { if (Math.random() < 0.7) { bpm += 10 + Math.random() * 10; $('hSay').textContent = EVT[Math.floor(Math.random() * EVT.length)]; } });
       const ask = (k) => {
         const [q, opts, right] = Q[k];
-        $('hQ').innerHTML = `<b>👮 ${q}</b>` + opts.map((o, i) => [o, i]).sort(() => Math.random() - 0.5).map(([o, i]) => `<button data-i="${i}">${esc(o)}</button>`).join('');
-        $('hQ').querySelectorAll('button').forEach((b) => (b.onclick = () => { answered++; if (+b.dataset.i !== right) { bad++; bpm += 20; } else bpm -= 5; $('hQ').innerHTML = ''; draw(); }));
+        pyz('konus');
+        $('hQ').innerHTML = `<b>${q}</b>` + opts.map((o, i) => [o, i]).sort(() => Math.random() - 0.5).map(([o, i]) => `<button data-i="${i}">${esc(o)}</button>`).join('');
+        $('hQ').querySelectorAll('button').forEach((b) => (b.onclick = () => { answered++; if (+b.dataset.i !== right) { bad++; bpm += 20; pyz('kizgin'); } else { bpm -= 5; pyz('mutlu'); } $('hQ').innerHTML = ''; draw(); }));
       };
       later(4500, () => ask(0));
       later(10000, () => ask(1));
       let step = 0;
-      every(1500, () => { step++; const q = '🧍'.repeat(Math.max(0, 4 - step)); $('hLine').innerHTML = `${q}<b>🧍‍♂️</b> → 👮`; });
+      every(1500, () => { step++; const q = '🧍'.repeat(Math.max(0, 4 - step)); $('hLine').innerHTML = `${q}<b>🧍‍♂️</b>`; });
       timerBar(el, 15, () => finish(clamp(inZone / Math.max(1, ticks) * 1.15 - bad * 0.2 - (2 - answered) * 0.1, 0, 1), { note: bad ? 'Cevapların polisin dikkatini çekti.' : 'Soğukkanlı göründün.' }), 'sıra ilerliyor');
     },
   },

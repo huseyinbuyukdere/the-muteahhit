@@ -549,3 +549,5 @@ body.cine::before, body.cine::after { height: 7vh; }
 .card-head .tag { white-space: nowrap; flex: 0 0 auto; }
 .card-head .proj { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .son-ders { margin: 10px 0; padding: 8px 10px; text-align: left; font-size: 14px; line-height: 1.4; background: rgba(240, 180, 40, .1); border-left: 4px solid #e0a020; border-radius: 6px; }
+.hv-line { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.hv-line > .avatar { flex: 0 0 52px; height: 52px; letter-spacing: 0; }
