@@ -1,6 +1,41 @@
 # Gece Raporu
 
-## Ne eklendi
+## Gece 2 — ne eklendi
+- **Telefonda kaydırma:** Kartı parmakla sağa-sola kaydırarak seçebiliyorsun. Masaüstünde tıklama ve tuşlar aynen çalışıyor.
+- **Animasyonlu yüzler:** Konuşan kişiler emoji yerine çizim yüz. Kötü teklife kızıyor, iyi habere gülüyor. Arsa pazarlığında da var.
+- **3B sahnede anlık tepki:** Kirli işte binada çatlak ve toz, temiz işte işçiler zıplıyor, kârlı işte altın parıltı.
+- **Gazete manşeti:** Deprem, ifşa, proje teslimi ve oyun sonunda kısa bir gazete sayfası çıkıyor. Kötü haberlerin altında "Gerçek hayatta" korunma notu var.
+- **Daha az yazı:** En uzun 27 kart kısaldı. Giriş kartı ve "Nasıl Oynanır" sadeleşti. Oyun sonunda 6 ana rakam var, gerisi "Bütün rakamlar"ın altında.
+- **Telefonda kamera:** Kart hangi binadan bahsediyorsa kamera ona dönüyor. Bina kartın üstündeki boşlukta tam görünüyor.
+- **Oyun sonu:** Her sonda "Gerçek hayatta" notu var. Kötü sonlarda nasıl korunacağın, iyi sonlarda sağlam müteahhidi nasıl tanıyacağın yazıyor.
+- **Küçük düzeltmeler:**
+  - Teslim manşetleri artık hep aynı değil.
+  - Zayıf binalar depremden şansla çıkınca gazete övmüyor, uyarıyor.
+  - Beton kartında konuşan usta kattan kata değişiyor.
+  - "Mehmet Ali Usta Usta" gibi çift unvan düzeldi.
+  - Denetim oyununda tehlikenin adı karenin altında yazıyor ("Baret yok" gibi).
+  - Havalimanında nabız 300'e çıkmıyor, polisin sorusunda doğru cevap hep ilk sırada değil.
+  - "Sıradaki rozet" önerisi her oyunda değişiyor.
+
+## Denge (Gece 2)
+- Kurallar değişmedi. Dürüst oyuncunun iflas oranı %9–15 arasında, çoğunlukla saygın patron oluyor.
+- Dolandırıcının yaklaşık yarısı kaçıyor, kalanlar yakalanıyor, kovuluyor ya da siyasete giriyor. Her zaman kazanmıyor. Kaçan da arkasında yüzlerce mağdur bırakıyor ve bu son ekranında görünüyor.
+
+## Yarım kalanlar
+- Havalimanı oyunundaki sıradaki yolcular ve polis hâlâ emoji, yüz çizimine geçmedi.
+- Ek düzeltici yabancı kökenli bazı isimlerde yanlış ek çıkarabilir.
+
+## Bilinen hatalar
+- Tarayıcı eski dosyaları önbellekte tutarsa yeni özellikler bir süre görünmeyebilir. Sayfayı yenilemek çözüyor.
+
+## Sonraki fikirler
+- Gazete manşetlerine iyi haber çeşitleri (ödül, kampanya, mağdura yardım).
+- Oyun sonunda "ev alırken 5 kontrol" gibi kısa bir kontrol listesi.
+- Havalimanı ve tapu mini oyunlarında da çizim yüzler.
+
+---
+
+## Gece 1 — ne eklendi
 - **Telefon (Harç):** Oyunun içinde sahte bir sosyal medya var. Paylaşım yapabiliyorsun, yorum geliyor. İfşa olabiliyorsun, linç yiyebiliyorsun, #TapumuVer kampanyası başlayabiliyor.
 - **Mini oyunlar:** Betona ne kadar su katılacağı, müfettiş gelmeden şantiyeyi toparlamak, arsa pazarlığı, tapu evrakı, havalimanında pasaport kontrolü.
 - **3B şehir:**
@@ -27,20 +62,6 @@
   - "Gerçek hayatta" notu kısa geliyor; devamı tıklayınca açılıyor.
 - **Oyunu bitiren seçenekler** "🏁 kariyerin biter" etiketiyle işaretli.
 
-## Denge
+### Denge (Gece 1)
 - Dürüst oyuncu çoğunlukla saygın patron oluyor. İflas oranı %9–13.
 - Dolandırıcı oyuncu genelde kaçıyor ya da yakalanıyor. Her zaman kazanmıyor.
-
-## Yarım kalanlar
-- Kart metinleri kısaltılmadı, sadece gösterim sadeleşti. Metinlerin çoğu zaten 1–2 cümle.
-- Ek düzeltici çoğu durumu yakalıyor ama yabancı kökenli bazı isimlerde yanlış ek çıkabilir.
-
-## Bilinen hatalar
-- Tarayıcı eski dosyaları önbellekte tutarsa yeni özellikler bir süre görünmeyebilir. Sayfayı yenilemek çözüyor.
-- Telefonda proje paneli açık kalırsa kartın üstünü kapatıyor. 🏢 düğmesiyle kapanıyor.
-
-## Sonraki fikirler
-- Kartları sağa ya da sola kaydırarak seçme (telefonda daha oyunsu olur).
-- Konuşan kişiler için küçük animasyonlu yüzler.
-- Seçime göre 3B sahnede anlık tepki (kirli işte binada çatlak, temiz işte işçilerin alkışı).
-- Oyun ilerledikçe açılan kısa "gazete manşeti" ekranları.
