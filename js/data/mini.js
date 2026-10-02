@@ -85,7 +85,12 @@ export function pazarlikCard(s, p, seed) {
   return {
     kind: "sys", phase: "arsa", projId: p.id, title: "Kat Karşılığı Pazarlığı",
     speaker: sp(name, dia, "AS", q, "🧓"),
-    text: `${p.semt}'daki arsa için masadasın. Arsa sahibi dairelerin %${ask}'ini istiyor. Karşı teklif verebilir, pazarlığı uzatabilir ya da hemen kabul edebilirsin. Sabrı sınırlı.`,
+    text: [
+      `${p.semt}'daki arsa için masadasın. Arsa sahibi dairelerden %${ask} pay istiyor. Karşı teklif verebilir ya da hemen kabul edebilirsin. Sabrı sınırlı.`,
+      `${p.semt}'da kahvenin önündesin. ${name} tespih çekiyor, dairelerden %${ask} pay istiyor. Yan masada başka bir müteahhit kulak kabartıyor.`,
+      `Arsa sahibinin oğlu da masada, avukatına mesaj atıyor. Aile dairelerden %${ask} pay istiyor. Çok uzatırsan masadan kalkarlar.`,
+      `${p.semt}'daki eski evin bahçesindesin; çaylar geldi. ${name} dairelerden %${ask} pay istiyor, 'komşunun arsası daha ucuza gitmedi' diyor.`,
+    ][seed % 4],
     miniCtx: { ask, name, dia },
     ders: "Kat karşılığı sözleşmelerde paylaşım oranı kadar, teslim tarihi, gecikme cezası, kullanılacak malzeme ve teminat da yazılmalıdır. Arsa sahipleri sözleşmeyi noterde düzenletmeli, tapuda kat irtifakı kurulmadan tüm payı devretmemeli; 'kademeli tapu devri' kendilerini korur.",
     choices: [
@@ -93,7 +98,7 @@ export function pazarlikCard(s, p, seed) {
         [0.8, "h-7 s+2", "El sıkıştınız. Arsa sahibi 'iyi pazarlıkçısın' deyip güldü."],
         [0.45, "h-3 s-2", "Ortada buluştunuz. İkiniz de biraz buruk."],
         [0, "h+4 s-10 d+1", "Arsa sahibi kalktı gitti. Bir ay sonra döndüğünde fiyatı artırmıştı."]] }, result: "" },
-      { label: `İstediği %${ask}'i ver, işi bağla`, fx: "h+4 s+10 v+1", result: "Arsa sahibi çok memnun. Senin kârın biraz inceldi." },
+      { label: `İstediği %${ask} payı ver, işi bağla`, fx: "h+4 s+10 v+1", result: "Arsa sahibi çok memnun. Senin kârın biraz inceldi." },
       { label: "'Başka arsa çok' diye masadan kalk", fx: "h-4 s-15 v-2", result: "Hemen geri çağırdı. Ama sana bir daha güvenmeyecek." },
     ],
   };
@@ -104,7 +109,11 @@ export function tapuCard(s, p) {
   return {
     kind: "sys", phase: "satis", projId: p.id, title: "Tapu Müdürlüğü",
     speaker: tk.sp(),
-    text: `${p.name} dairelerinin tapu devri için randevu günü. Sıra numarası elinde; eksik evrak getiren işlemini baştan yapıyor. ${tk.ad} kapıda 'hızlandırma' teklif ediyor.`,
+    text: [
+      `${p.name} dairelerinin tapu devri için randevu günü. Sıra numarası elinde; eksik evrak getiren işlemini baştan yapıyor. ${tk.ad} kapıda 'hızlandırma' teklif ediyor.`,
+      `Tapu dairesinde sistem yarım saattir çöküyor, sıra kapıya kadar uzadı. ${p.name} alıcıları sabırsız. ${tk.ad} yanına yanaşıp 'bende iş biter' diyor.`,
+      `${p.name} alıcılarından biri yaşlı annesini de getirmiş, sırada yoruluyorlar. ${tk.ad} koridorda 'arka kapıdan alırım' diye fısıldıyor.`,
+    ][p.id % 3],
     ders: "Tapu işlemleri e-Devlet ve Web Tapu üzerinden randevuyla yapılır; kimlik, son 6 ayda çekilmiş fotoğraf, geçerli DASK poliçesi ve belediyeden emlak vergisi değer yazısı istenir. Harçlar resmi hesaba yatırılır. 'Sıra atlatan', 'işi hızlandıran' aracılara para vermek hem dolandırılma riski taşır hem de suçtur.",
     choices: [
       { label: "Evrakları kendin topla, sıranı bekle (mini oyun)", act: { type: "mini", game: "tapu", tiers: [

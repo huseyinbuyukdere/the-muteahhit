@@ -44,7 +44,16 @@ export function manset(s, c, res) {
     }
     const ayakta = s.projects.filter((p) => p.done && !p.collapsed);
     if (ayakta.some((p) => (p.kalite ?? 100) < 50)) return { baslik: 'DEPREM UCUZ ATLATILDI', alt: `${s.firma || 'Firmanın'} zayıf binaları bu sefer şans eseri ayakta kaldı`, ton: 'gri', ders: 'Bir depremden sağ çıkan bina sağlam demek değildir; sonraki depremde çökebilir. Bağımsız inceleme yaptır.', foto: 'catlak' };
-    if (ayakta.length) return { baslik: 'DEPREMDE AYAKTA KALDI', alt: `${s.firma || 'Firmanın'} binalarında tek çatlak yok. Sağlam yapmanın karşılığı.`, ton: 'iyi', foto: 'bina' };
+    if (ayakta.length) {
+      const p = ayakta[(s.t || 0) % ayakta.length];
+      const v = [
+        ['DEPREMDE AYAKTA KALDI', `${s.firma || 'Firmanın'} binalarında tek çatlak yok. Sağlam yapmanın karşılığı.`],
+        [`${p.semt}'da sakinler evine döndü`, `${p.name} sarsıntıdan hasarsız çıktı; komşular çay demledi`],
+        ['SIVA BİLE DÖKÜLMEDİ', `Mühendisler ${p.name} için 'beton da demir de şartnamede' dedi`],
+      ];
+      const [b, a] = v[(s.t || 0) % v.length];
+      return { baslik: BUYUK(b), alt: a, ton: 'iyi', foto: 'bina' };
+    }
     return null;
   }
   const ifsa = res.events.find((e) => e[0] === 'linc' && e[1].startsWith('📸'));
