@@ -263,7 +263,7 @@ export function drawCard(s) {
       return { ...a.steps[st].card(s), arc: a.id, arcStep: st, scale: lifeScale(s) };
     }
   }
-  if (Object.keys(s.owned || {}).length && rnd() < 0.12) { const c = tplCard(s, "hayat", pick(act)); if (c) return c; }
+  if (rnd() < (Object.keys(s.owned || {}).length ? 0.12 : 0)) { const c = tplCard(s, "hayat", pick(act)); if (c) return c; }
   if (rnd() < 0.16) return tplCard(s, "genel", pick(act));
   // en uzun süredir ilgilenilmeyen projeye öncelik
   const proj = act.slice().sort((a, b) => a.lastTurn - b.lastTurn)[0];
