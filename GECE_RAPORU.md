@@ -20,6 +20,13 @@
   - Siyaset daveti artık oyunun ilk aylarında gelip kariyeri bitirmiyor; en erken 3. yılda ve bir bina teslim ettikten sonra geliyor.
   - Havalimanında polisin, tapuda memurun da çizim yüzü var; yanlışta kızıyorlar.
 
+## Gündüz devamı (2 Ekim)
+- **Daha az tekrar:** Arsa pazarlığı, tapu günü ve "depremde ayakta kaldı" haberi artık her seferinde farklı yazıyor.
+- **6 yeni "Hayatın" kartı:** Kuzenin senetsiz daire istemesi, komşunun maketten ev alması, okul aidatı ile usta maaşı arasında kalmak, kapıdaki gazeteci, annenin arsası, satılmış dairelere ipotek teklifi. Her birinde "Gerçek hayatta" notu var.
+- **İyi haber manşetleri:** Okul bağışlamak, mağduru dinlemek, komşuyu uyarmak gibi seçimler de gazeteye çıkıyor. Bunlarda not kutusu yeşil.
+- **Yazım:** "%52'ini" gibi yanlış ekler kaldırıldı.
+- Denge: 1000 oyunluk denemede dürüst oyuncunun iflası %13. Hayat kartlarını lüks almayan oyunculara da açmayı denedim; iflas %15'i geçince geri aldım.
+
 ## Denge (Gece 2)
 - Tek kural değişikliği: siyaset daveti geç geliyor. Dürüst oyuncunun iflas oranı %9–15 arasında, çoğunlukla saygın patron oluyor.
 - Dolandırıcının yaklaşık yarısı kaçıyor, kalanlar yakalanıyor, kovuluyor ya da siyasete giriyor. Her zaman kazanmıyor. Kaçan da arkasında yüzlerce mağdur bırakıyor ve bu son ekranında görünüyor.
