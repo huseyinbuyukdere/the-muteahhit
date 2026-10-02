@@ -526,7 +526,7 @@ function doChoose(i, mini) {
     } else S3.sync(state);
     if (state.ending === 'kacak' || state.ending === 'iade') { S3.flyPlane(); S3.cinematic('kacis'); }
   }
-  bekleyenManset = GZ.manset(state, c, res);
+  bekleyenManset = GZ.manset(state, c, res, c.choices?.[i]?.label);
   delete state.lastQuake;
   render();
   for (const [k] of STATS) if (Math.round(before[k]) !== Math.round(state[k])) { const el = $(`st-${k}`); if (el) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); } }

@@ -533,6 +533,7 @@ body.cine::before, body.cine::after { height: 7vh; }
 .gz-foto { width: 96px; flex: 0 0 96px; height: auto; background: #d8cfb8; filter: grayscale(1) contrast(1.1); border: 1px solid #9c917a; }
 .gz-alt { margin: 0; font-size: 15px; line-height: 1.35; font-style: italic; }
 .gz-ders { margin: 10px 0 0; padding: 7px 9px; background: #fff6e0; border-left: 4px solid #c0392b; font-family: system-ui, sans-serif; font-size: 13px; line-height: 1.35; }
+.ton-iyi .gz-ders { border-left-color: #2e8b57; background: #eef8ee; }
 .gz-kapat { display: block; margin-top: 10px; text-align: right; font-family: system-ui, sans-serif; color: #776c55; font-size: 12px; }
 @keyframes gzDon { from { transform: scale(.15) rotate(-540deg); opacity: 0; } 70% { opacity: 1; } to { transform: scale(1) rotate(-1.5deg); } }
 @keyframes gzKarar { from { background: rgba(8, 10, 14, 0); } }

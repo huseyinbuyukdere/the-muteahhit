@@ -31,7 +31,7 @@
 - Tarayıcı eski dosyaları önbellekte tutarsa yeni özellikler bir süre görünmeyebilir. Sayfayı yenilemek çözüyor.
 
 ## Sonraki fikirler
-- Gazete manşetlerine iyi haber çeşitleri (ödül, kampanya, mağdura yardım).
+- (Yapıldı) İyi haber manşetleri.
 
 ---
 

@@ -26,7 +26,20 @@ export const sonIyi = (k) => SON[k]?.[2] === 'iyi';
 export const sonDers = (k) => SON[k]?.[3] || (SON[k] ? IYI_DERS : null);
 
 // Sonuçtan manşet çıkar; yoksa null
-export function manset(s, c, res) {
+// İyi seçimlerin haberi: kart başlığı + seçenek etiketinin başı
+const IYI_HABER = [
+  ['Cami mi Okul mu?', 'Okul yaptır', (s) => ['MAHALLEYE YENİ OKUL', `Bağışçı ${s.firma || 'müteahhit'} adını kapıya bile yazdırmadı`]],
+  ['Mağdur Arabanın Önünde', 'Arabadan in', () => ['MÜTEAHHİT ARABADAN İNDİ, MAĞDURU DİNLEDİ', 'Yıllardır beklenen tapu bu ay veriliyor']],
+  ['Gazeteci Kapıda', 'Bağımsız inceleme', (s) => ['ÇATLAKLAR İÇİN BAĞIMSIZ İNCELEME', `${s.firma || 'Firma'} raporu sakinlerle paylaşacak`]],
+  ['Komşu Ev Alacak', 'Sözleşmeyi oku', () => ['EMEKLİ İKRAMİYESİ SON ANDA KURTULDU', 'Komşunun uyarısıyla ruhsatsız projeye para verilmedi']],
+  ['Bankadan Kredi Teklifi', 'Krediyi satılmamış', () => ['SATILAN DAİRELERE İPOTEK YOK', 'Alıcılar tapularını temiz aldı']],
+];
+const IYI_HABER_DERS = {
+  'Komşu Ev Alacak': 'Maketten ev alırken ruhsatı belediyeden, tapuyu e-Devlet\'ten kontrol et; satış vaadini tapuya şerh ettir.',
+  'Bankadan Kredi Teklifi': 'Ev alırken tapu kaydında ipotek ya da haciz var mı, e-Devlet\'ten mutlaka bak.',
+};
+
+export function manset(s, c, res, secim = '') {
   if (s.ending && SON[s.ending]) {
     const [b, a, ton, ders] = SON[s.ending];
     return { baslik: b, alt: a, ton, ders };
@@ -63,6 +76,11 @@ export function manset(s, c, res) {
       ? { baslik: 'TAKİPÇİLERİN ÇOĞU BOT ÇIKTI', alt: `${s.firma || 'Müteahhit'} sosyal medyada satın alınmış hesaplarla büyümüş`, ton: 'kotu', ders: 'Takipçi sayısı güven göstermez; firmanın teslim ettiği binaları gidip gör.', foto: 'telefon' }
       : { baslik: 'MÜTEAHHİDİN YALANI İFŞA OLDU', alt: 'Paylaşımı ile belgeler yan yana kondu', ton: 'kotu', ders: 'Reklamdaki vaadi ruhsat, iskân ve tapu belgeleriyle karşılaştır.', foto: 'telefon' };
   }
+  const iyi = IYI_HABER.find(([b, l]) => c.title === b && secim.startsWith(l));
+  if (iyi) {
+    const [baslik, alt] = iyi[2](s);
+    return { baslik, alt, ton: 'iyi', ders: IYI_HABER_DERS[c.title], foto: 'bina' };
+  }
   const tamam = res.events.find((e) => e[0] === 'info' && /tamamlandı!/.test(e[1]));
   if (tamam) {
     const p = s.projects.filter((x) => x.done && !x.collapsed).sort((a, b) => (b.doneAt ?? 0) - (a.doneAt ?? 0))[0];
@@ -97,7 +115,7 @@ export function goster(m, tarih, sonra) {
     <div class="gz-ust"><span>${tarih}</span><b>${AD}</b><span>Fiyatı: 10 TL</span></div>
     <h2 class="gz-baslik">${esc(m.baslik)}</h2>
     <div class="gz-govde">${m.foto ? `<svg viewBox="0 0 100 80" class="gz-foto" aria-hidden="true">${FOTO[m.foto]}</svg>` : ''}<p class="gz-alt">${esc(m.alt)}</p></div>
-    ${m.ders ? `<p class="gz-ders">⚠️ <b>Gerçek hayatta:</b> ${esc(m.ders)}</p>` : ''}
+    ${m.ders ? `<p class="gz-ders">${m.ton === 'iyi' ? '💡' : '⚠️'} <b>Gerçek hayatta:</b> ${esc(m.ders)}</p>` : ''}
     <small class="gz-kapat">Devam etmek için dokun ▸</small>
   </div>`;
   document.body.appendChild(el);
