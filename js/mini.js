@@ -54,7 +54,7 @@ const GAMES = {
       el.innerHTML = `
         <div class="beton">
           <div class="mixer"><span id="bMix">🚛</span><div class="drum" id="bDrum"></div></div>
-          <div class="bubble-s" id="bSay">Şoför: "Abi biraz su katayım mı, kolay aksın?"</div>
+          <div class="tp-memur"><span id="bYuz" class="avatar">👷</span><div class="bubble-s" id="bSay">Şoför: "Abi biraz su katayım mı, kolay aksın?"</div></div>
           <label class="ratio">Su / çimento: <b id="bVal"></b></label>
           <input type="range" id="bSl" min="30" max="85" value="${w * 100}" step="1">
           <div class="zone"><i style="left:${(40 - 30) / 55 * 100}%;width:${10 / 55 * 100}%"><small>şartname</small></i></div>
@@ -65,6 +65,9 @@ const GAMES = {
           <button class="primary big" id="bGo">DÖK! 🏗️</button>
         </div>`;
       const sl = $('bSl');
+      // Ustanın yüzü: kıvam doğruysa güler, değilse kızar
+      yuzKoy($('bYuz'), { name: 'usta', role: 'US', emoji: '👷', quote: '' }, 'konus');
+      const uyz = (f) => { if ($('bYuz').classList.contains('yuz')) ifadeVer($('bYuz'), f); };
       const upd = () => {
         w = sl.value / 100;
         $('bVal').textContent = w.toFixed(2).replace('.', ',');
@@ -72,6 +75,7 @@ const GAMES = {
         $('bStr').style.width = `${str * 100}%`; $('bStr').style.background = str > 0.6 ? '#46a758' : str > 0.4 ? '#f4a20d' : '#e5484d';
         $('bFlow').style.width = `${flow * 100}%`;
         $('bSay').textContent = w < 0.38 ? 'Usta: "Uşağum bu beton pompadan geçmez, taş gibi!"' : w > 0.55 ? 'Usta: "Çorba gibi oldi, kolonun içinde ne kalacak?"' : 'Usta: "Hah, kıvamı bu. Vibratörü hazırlayun!"';
+        uyz(w < 0.38 || w > 0.55 ? 'kizgin' : w >= 0.4 && w <= 0.5 ? 'mutlu' : 'konus');
       };
       sl.oninput = upd; upd();
       // Şoför sinsice su katar
