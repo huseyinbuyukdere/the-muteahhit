@@ -25,6 +25,9 @@
 - **6 yeni "Hayatın" kartı:** Kuzenin senetsiz daire istemesi, komşunun maketten ev alması, okul aidatı ile usta maaşı arasında kalmak, kapıdaki gazeteci, annenin arsası, satılmış dairelere ipotek teklifi. Her birinde "Gerçek hayatta" notu var.
 - **İyi haber manşetleri:** Okul bağışlamak, mağduru dinlemek, komşuyu uyarmak gibi seçimler de gazeteye çıkıyor. Bunlarda not kutusu yeşil.
 - **Yazım:** "%52'ini" gibi yanlış ekler kaldırıldı.
+- **Beton oyununda usta yüzü:** Kıvam doğruysa gülüyor, sulu ya da kuruysa kızıyor.
+- **Rehbere yeni madde:** Satılmış daireye ipotek ve nasıl korunulur.
+- Kuzene ve alıcıya aynı daireyi satmak artık mükerrer satış dosyasını açıyor.
 - Denge: 1000 oyunluk denemede dürüst oyuncunun iflası %13. Hayat kartlarını lüks almayan oyunculara da açmayı denedim; iflas %15'i geçince geri aldım.
 
 ## Denge (Gece 2)
