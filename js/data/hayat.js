@@ -189,7 +189,7 @@ export default [
     "Kuzenin arayıp 'bize bir daire ayır, parayı yavaş yavaş öderiz' diyor. Bütün aile bayramda bu konuyu konuşacak.",
     "Akrabaya bile senetsiz, sözleşmesiz ev satmak ileride büyük kavgaya döner. Satış vaadi sözleşmesi noterde yapılmalı, ödeme planı yazılı olmalıdır.",
     ["Noterde sözleşme yap, ödeme planını yaz", "n-0.1 i+3 v+3", "Kuzen biraz bozuldu ama sözleşmeyi imzaladı. Bayram huzurlu geçti."],
-    ["Aynı daireyi hem kuzene hem bir alıcıya sat", "n+1 v-8 r+5 m+1", "Bayramda kimse sana bakmadı. Kuzenin avukat tuttu."],
+    ["Aynı daireyi hem kuzene hem bir alıcıya sat", "n+1 v-8 r+5 m+1 F:mukerrer", "Bayramda kimse sana bakmadı. Kuzenin avukat tuttu."],
     ["'Bu sefer olmaz' de, kibarca geri çevir", "i-1", "Teyzen bir süre telefonlarını açmadı."]),
 
   S("Komşu Ev Alacak",
